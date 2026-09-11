@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tour Nueva York</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --hairline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --land:           #eef1ef;
+    --land-border:    #d3dbd6;
+    --water:          #e4edf5;
+    --series-1:       #2a78d6;
+    --series-1-soft:  rgba(42,120,214,0.16);
+    --card-shadow:    0 12px 32px rgba(11,11,11,0.14), 0 2px 8px rgba(11,11,11,0.08);
+    --cat-sightseeing:#2a78d6;
+    --cat-food:       #d97a34;
+    --cat-transport:  #7c5cd6;
+    --cat-lodging:    #2f9e63;
+    --cat-other:      #8b897f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #8f8d84;
+      --hairline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --land:           #232522;
+      --land-border:    #34433a;
+      --water:          #14202b;
+      --series-1:       #3987e5;
+      --series-1-soft:  rgba(57,135,229,0.22);
+      --card-shadow:    0 12px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.35);
+      --cat-sightseeing:#4c94e8;
+      --cat-food:       #e79552;
+      --cat-transport:  #9b82e8;
+      --cat-lodging:    #4bbb85;
+      --cat-other:      #a3a196;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #8f8d84;
+    --hairline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.10);
+    --land:           #232522;
+    --land-border:    #34433a;
+    --water:          #14202b;
+    --series-1:       #3987e5;
+    --series-1-soft:  rgba(57,135,229,0.22);
+    --card-shadow:    0 12px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.35);
+    --cat-sightseeing:#4c94e8;
+    --cat-food:       #e79552;
+    --cat-transport:  #9b82e8;
+    --cat-lodging:    #4bbb85;
+    --cat-other:      #a3a196;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .app {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 20px 40px;
+  }
+
+  header.app-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    max-width: 52ch;
+  }
+  .crumb-link {
+    display: inline-block;
+    font-size: 0.78rem;
+    color: var(--series-1);
+    text-decoration: none;
+  }
+  .crumb-link:hover { text-decoration: underline; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .search-box { position: relative; }
+  .search-box input {
+    width: 200px;
+    padding: 9px 12px 9px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    outline: none;
+  }
+  .search-box input:focus {
+    border-color: var(--series-1);
+    box-shadow: 0 0 0 3px var(--series-1-soft);
+  }
+  .search-box svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  /* --- summary bar --- */
+  .summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .summary-card {
+    flex: 1 1 140px;
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .summary-card .val { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+  .summary-card .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  /* --- filter chips --- */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip-group .chip-label { font-size: 0.72rem; color: var(--text-muted); margin-right: 2px; }
+  .chip {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .chip:hover { border-color: var(--series-1); }
+  .chip.is-active {
+    background: var(--series-1);
+    border-color: var(--series-1);
+    color: #fff;
+  }
+  .chip .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* --- map --- */
+  .map-card {
+    position: relative;
+    background: var(--water);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  svg.map { display: block; width: 100%; height: auto; }
+  .zone-rect { fill: var(--land); stroke: var(--land-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .zone-label {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .place-marker { cursor: pointer; outline: none; }
+  .place-marker .pulse { opacity: 0.18; transform-origin: center; transform-box: fill-box; }
+  .place-marker .dot {
+    stroke: var(--surface-1);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    transition: transform 120ms ease;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .place-marker .hit { fill: transparent; }
+  .place-marker .label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--text-primary);
+    paint-order: stroke;
+    stroke: var(--surface-1);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 120ms ease;
+    pointer-events: none;
+  }
+  .place-marker:hover .dot,
+  .place-marker:focus-visible .dot,
+  .place-marker.is-active .dot { transform: scale(1.4); }
+  .place-marker:hover .label,
+  .place-marker:focus-visible .label,
+  .place-marker.is-active .label { opacity: 1; }
+  .place-marker.is-dimmed { opacity: 0.2; }
+
+  .tooltip {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    min-width: 220px;
+    max-width: 270px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 14px 16px;
+    opacity: 0;
+    transform: translate(-50%, -10px);
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .tooltip.is-visible { opacity: 1; transform: translate(-50%, -16px); }
+  .tooltip .t-name { font-size: 0.98rem; font-weight: 700; margin: 0 0 2px; }
+  .tooltip .t-zone { font-size: 0.76rem; color: var(--text-muted); margin: 0 0 8px; }
+  .tooltip .t-notes { font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); margin: 0 0 10px; }
+  .tooltip .t-stats { display: flex; gap: 12px; border-top: 1px solid var(--hairline); padding-top: 9px; flex-wrap: wrap; }
+  .tooltip .t-stat .val { font-size: 0.85rem; font-weight: 700; }
+  .tooltip .t-stat .lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  .legend {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--card-shadow);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-item .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* --- itinerary --- */
+  .itinerary h2 { font-size: 1.1rem; margin: 0 0 12px; }
+  .day-block {
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .day-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--page);
+  }
+  .day-head .day-title { font-weight: 700; font-size: 0.95rem; }
+  .day-head .day-total { font-size: 0.8rem; color: var(--text-muted); }
+  .place-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--hairline);
+    transition: background 120ms ease;
+  }
+  .place-row:last-child { border-bottom: none; }
+  .place-row:hover, .place-row.is-active { background: var(--series-1-soft); }
+  .place-row.is-hidden { display: none; }
+  .place-row .time-col {
+    flex: 0 0 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding-top: 1px;
+  }
+  .place-row .cat-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex: 0 0 9px;
+  }
+  .place-row .body { flex: 1; min-width: 0; }
+  .place-row .name-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .place-row .zone-tag {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-weight: 500;
+  }
+  .place-row .notes {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 2px 0 0;
+  }
+  .place-row .cost-col {
+    flex: 0 0 64px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding-top: 1px;
+  }
+
+  footer.note {
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 640px) {
+    .controls { width: 100%; }
+    .search-box { flex: 1; }
+    .search-box input { width: 100%; }
+    .legend { position: static; margin: 10px 12px 0; box-shadow: none; border: none; border-top: 1px solid var(--hairline); border-radius: 0; padding: 10px 4px 4px; }
+    .place-row { flex-wrap: wrap; }
+    .place-row .time-col { flex: 0 0 auto; }
+    .place-row .cost-col { flex: 0 0 auto; margin-left: 15px; text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div>
+      <a class="crumb-link" href="index.html">← Latinoamérica</a>
+      <h1>Nueva York — plan de viaje</h1>
+      <p class="subtitle">Manhattan, aeropuerto JFK y Nueva Jersey. Mapa esquemático (no a escala real) + itinerario día por día con horarios y costos estimados.</p>
+    </div>
+    <div class="controls">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Buscar lugar…" autocomplete="off" />
+      </div>
+    </div>
+  </header>
+
+  <div class="summary-bar" id="summary-bar"></div>
+
+  <div class="filters">
+    <div class="chip-group" id="day-filters"><span class="chip-label">Día</span></div>
+    <div class="chip-group" id="cat-filters"><span class="chip-label">Categoría</span></div>
+  </div>
+
+  <div class="map-card">
+    <svg class="map" viewBox="0 0 820 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa esquemático de Manhattan, JFK y Nueva Jersey con lugares del itinerario">
+      <g id="zone-layer"></g>
+      <g id="marker-layer"></g>
+    </svg>
+    <div class="legend" id="legend"></div>
+    <div class="tooltip" id="tooltip" role="status" aria-live="polite">
+      <p class="t-name" id="t-name"></p>
+      <p class="t-zone" id="t-zone"></p>
+      <p class="t-notes" id="t-notes"></p>
+      <div class="t-stats">
+        <div class="t-stat"><div class="val" id="t-day"></div><div class="lbl">Día</div></div>
+        <div class="t-stat"><div class="val" id="t-time"></div><div class="lbl">Horario</div></div>
+        <div class="t-stat"><div class="val" id="t-cost"></div><div class="lbl">Costo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="itinerary">
+    <h2>Itinerario</h2>
+    <div id="day-list"></div>
+  </div>
+
+  <footer class="note">Datos de ejemplo — reemplaza y agrega lugares en el arreglo <code>PLACES</code> del script (nombre, zona, día, horario, costo, categoría, notas, lat/lon). El mapa, los filtros, el resumen de costos y el itinerario se generan automáticamente a partir de esa lista.</footer>
+</div>
+
+<script>
+(function () {
+  // --- schematic zones (approximate lon/lat boxes, not real borders) ---
+  const ZONES = [
+    { name: "New Jersey",  lonMin: -74.28, lonMax: -74.03, latMin: 40.68, latMax: 40.90 },
+    { name: "Manhattan",   lonMin: -74.02, lonMax: -73.93, latMin: 40.695, latMax: 40.88 },
+    { name: "Harbor",      lonMin: -74.065, lonMax: -74.005, latMin: 40.665, latMax: 40.705 },
+    { name: "JFK / Queens",lonMin: -73.92, lonMax: -73.72, latMin: 40.60, latMax: 40.78 }
+  ];
+
+  // --- editable trip data: add/remove places here ---
+  // category: "sightseeing" | "food" | "transport" | "lodging" | "other"
+  const PLACES = [
+    { name: "Llegada — Aeropuerto JFK", zone: "JFK / Queens", category: "transport", day: 1, time: "14:00–15:30", cost: 0, lat: 40.6413, lon: -73.7781, notes: "Vuelo de llegada, migración y equipaje." },
+    { name: "Traslado a Manhattan", zone: "Manhattan", category: "transport", day: 1, time: "15:30–16:30", cost: 70, lat: 40.7549, lon: -73.9840, notes: "Taxi/Uber o AirTrain + subte hasta Midtown." },
+    { name: "Check-in hotel (Midtown)", zone: "Manhattan", category: "lodging", day: 1, time: "16:30–17:30", cost: 220, lat: 40.7549, lon: -73.9840, notes: "Hotel de ejemplo — reemplazar con la reserva real." },
+    { name: "Cena en Hell's Kitchen", zone: "Manhattan", category: "food", day: 1, time: "19:00–20:30", cost: 55, lat: 40.7638, lon: -73.9918, notes: "Zona con muchas opciones, no necesita reserva." },
+
+    { name: "Times Square", zone: "Manhattan", category: "sightseeing", day: 2, time: "09:00–10:00", cost: 0, lat: 40.7580, lon: -73.9855, notes: "Mejor temprano, antes de la multitud." },
+    { name: "Empire State Building", zone: "Manhattan", category: "sightseeing", day: 2, time: "10:30–12:00", cost: 45, lat: 40.7484, lon: -73.9857, notes: "Comprar entrada con horario anticipado." },
+    { name: "Central Park", zone: "Manhattan", category: "sightseeing", day: 2, time: "14:00–16:30", cost: 0, lat: 40.7829, lon: -73.9654, notes: "Caminata / alquiler de bicicletas opcional." },
+    { name: "Show de Broadway", zone: "Manhattan", category: "other", day: 2, time: "19:30–22:00", cost: 120, lat: 40.7590, lon: -73.9845, notes: "Reservar entradas con anticipación." },
+
+    { name: "Ferry — Estatua de la Libertad / Ellis Island", zone: "Harbor", category: "sightseeing", day: 3, time: "09:00–13:00", cost: 24, lat: 40.7033, lon: -74.0170, notes: "Sale desde Battery Park, reservar ferry con anticipación." },
+    { name: "Puente de Brooklyn", zone: "Manhattan", category: "sightseeing", day: 3, time: "15:00–16:00", cost: 0, lat: 40.7061, lon: -73.9969, notes: "Cruzar a pie desde el lado de Manhattan." },
+    { name: "Liberty State Park, NJ", zone: "New Jersey", category: "sightseeing", day: 3, time: "17:00–18:30", cost: 0, lat: 40.7093, lon: -74.0554, notes: "Vistas del perfil urbano de Manhattan al atardecer." },
+
+    { name: "Jersey City — Journal Square", zone: "New Jersey", category: "other", day: 4, time: "10:00–12:00", cost: 20, lat: 40.7328, lon: -74.0639, notes: "Paseo y almuerzo." },
+    { name: "Check-out del hotel", zone: "Manhattan", category: "lodging", day: 4, time: "12:30–13:00", cost: 0, lat: 40.7549, lon: -73.9840, notes: "" },
+    { name: "Traslado a JFK", zone: "JFK / Queens", category: "transport", day: 4, time: "14:00–15:00", cost: 70, lat: 40.6413, lon: -73.7781, notes: "" },
+    { name: "Salida — Aeropuerto JFK", zone: "JFK / Queens", category: "transport", day: 4, time: "17:00", cost: 0, lat: 40.6413, lon: -73.7781, notes: "Vuelo de regreso." }
+  ];
+
+  const CATEGORY_LABEL = { sightseeing: "Turismo", food: "Comida", transport: "Transporte", lodging: "Alojamiento", other: "Otro" };
+
+  const W = 820, H = 560;
+  const LON_MIN = -74.30, LON_MAX = -73.70;
+  const LAT_MIN = 40.58, LAT_MAX = 40.92;
+
+  function project(lon, lat) {
+    const x = (lon - LON_MIN) / (LON_MAX - LON_MIN) * W;
+    const y = (LAT_MAX - lat) / (LAT_MAX - LAT_MIN) * H;
+    return [x, y];
+  }
+
+  function fmtCost(n) {
+    if (!n) return "Gratis";
+    return "$" + n.toLocaleString('en-US');
+  }
+  function catColor(cat) {
+    return getComputedStyle(document.documentElement).getPropertyValue('--cat-' + cat).trim() || 'var(--cat-other)';
+  }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const zoneLayer = document.getElementById('zone-layer');
+  const markerLayer = document.getElementById('marker-layer');
+  const tooltip = document.getElementById('tooltip');
+  const mapCard = document.querySelector('.map-card');
+  const svgEl = document.querySelector('svg.map');
+
+  // --- draw schematic zones ---
+  ZONES.forEach(function (z) {
+    const [x1, y1] = project(z.lonMin, z.latMax);
+    const [x2, y2] = project(z.lonMax, z.latMin);
+    const rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('class', 'zone-rect');
+    rect.setAttribute('x', Math.min(x1, x2));
+    rect.setAttribute('y', Math.min(y1, y2));
+    rect.setAttribute('width', Math.abs(x2 - x1));
+    rect.setAttribute('height', Math.abs(y2 - y1));
+    rect.setAttribute('rx', 22);
+    zoneLayer.appendChild(rect);
+
+    const label = document.createElementNS(svgNS, 'text');
+    label.setAttribute('class', 'zone-label');
+    label.setAttribute('x', Math.min(x1, x2) + 14);
+    label.setAttribute('y', Math.min(y1, y2) + 22);
+    label.textContent = z.name;
+    zoneLayer.appendChild(label);
+  });
+
+  // --- markers ---
+  const markers = [];
+
+  PLACES.forEach(function (place, i) {
+    const [x, y] = project(place.lon, place.lat);
+    const color = catColor(place.category);
+
+    const g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'place-marker');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'button');
+    g.setAttribute('aria-label', place.name);
+    g.setAttribute('data-index', i);
+
+    const pulse = document.createElementNS(svgNS, 'circle');
+    pulse.setAttribute('class', 'pulse');
+    pulse.setAttribute('cx', x); pulse.setAttribute('cy', y); pulse.setAttribute('r', 16);
+    pulse.setAttribute('fill', color);
+
+    const hit = document.createElementNS(svgNS, 'circle');
+    hit.setAttribute('class', 'hit');
+    hit.setAttribute('cx', x); hit.setAttribute('cy', y); hit.setAttribute('r', 18);
+
+    const dot = document.createElementNS(svgNS, 'circle');
+    dot.setAttribute('class', 'dot');
+    dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 8);
+    dot.setAttribute('fill', color);
+
+    const label = document.createElementNS(svgNS, 'text');
+    label.setAttribute('class', 'label');
+    label.setAttribute('x', x);
+    label.setAttribute('y', y - 14);
+    label.setAttribute('text-anchor', 'middle');
+    label.textContent = place.name;
+
+    g.appendChild(pulse);
+    g.appendChild(hit);
+    g.appendChild(dot);
+    g.appendChild(label);
+    markerLayer.appendChild(g);
+
+    function show() {
+      markers.forEach(function (m) { m.el.classList.remove('is-active'); });
+      g.classList.add('is-active');
+      document.getElementById('t-name').textContent = place.name;
+      document.getElementById('t-zone').textContent = place.zone + ' · ' + CATEGORY_LABEL[place.category];
+      document.getElementById('t-notes').textContent = place.notes || '';
+      document.getElementById('t-day').textContent = 'Día ' + place.day;
+      document.getElementById('t-time').textContent = place.time;
+      document.getElementById('t-cost').textContent = fmtCost(place.cost);
+
+      const cardRect = mapCard.getBoundingClientRect();
+      const svgRect = svgEl.getBoundingClientRect();
+      const scale = svgRect.width / W;
+      const px = (svgRect.left - cardRect.left) + x * scale;
+      const py = (svgRect.top - cardRect.top) + y * scale;
+
+      tooltip.classList.add('is-visible');
+      tooltip.style.left = px + 'px';
+      tooltip.style.top = py + 'px';
+
+      requestAnimationFrame(function () {
+        const tRect = tooltip.getBoundingClientRect();
+        const cRect = mapCard.getBoundingClientRect();
+        let shiftX = 0;
+        if (tRect.left < cRect.left + 8) shiftX = (cRect.left + 8) - tRect.left;
+        if (tRect.right > cRect.right - 8) shiftX = (cRect.right - 8) - tRect.right;
+        tooltip.style.transform = shiftX !== 0 ? 'translate(calc(-50% + ' + shiftX + 'px), -16px)' : '';
+        tooltip.style.top = (py - tRect.height) + 'px';
+      });
+
+      const row = document.querySelector('.place-row[data-index="' + i + '"]');
+      if (row) row.classList.add('is-active');
+    }
+    function hide() {
+      g.classList.remove('is-active');
+      tooltip.classList.remove('is-visible');
+      tooltip.style.transform = 'translate(-50%, -10px)';
+      const row = document.querySelector('.place-row[data-index="' + i + '"]');
+      if (row) row.classList.remove('is-active');
+    }
+
+    g.addEventListener('mouseenter', show);
+    g.addEventListener('mouseleave', hide);
+    g.addEventListener('focus', show);
+    g.addEventListener('blur', hide);
+
+    markers.push({ el: g, place: place, show: show, hide: hide });
+  });
+
+  // --- legend (category colors) ---
+  const legend = document.getElementById('legend');
+  Object.keys(CATEGORY_LABEL).forEach(function (cat) {
+    const item = document.createElement('span');
+    item.className = 'legend-item';
+    item.innerHTML = '<span class="dot" style="background:' + catColor(cat) + '"></span>' + CATEGORY_LABEL[cat];
+    legend.appendChild(item);
+  });
+
+  // --- summary bar ---
+  const days = Array.from(new Set(PLACES.map(function (p) { return p.day; }))).sort(function (a, b) { return a - b; });
+  const totalCost = PLACES.reduce(function (sum, p) { return sum + (p.cost || 0); }, 0);
+  const summaryBar = document.getElementById('summary-bar');
+  [
+    { val: days.length, lbl: 'Días' },
+    { val: PLACES.length, lbl: 'Lugares' },
+    { val: fmtCost(totalCost), lbl: 'Costo estimado total' }
+  ].forEach(function (s) {
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.innerHTML = '<div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div>';
+    summaryBar.appendChild(card);
+  });
+
+  // --- itinerary list (grouped by day) ---
+  const dayList = document.getElementById('day-list');
+  const rowsByIndex = {};
+
+  days.forEach(function (day) {
+    const dayPlaces = PLACES
+      .map(function (p, i) { return { p: p, i: i }; })
+      .filter(function (item) { return item.p.day === day; });
+    const dayTotal = dayPlaces.reduce(function (sum, item) { return sum + (item.p.cost || 0); }, 0);
+
+    const block = document.createElement('div');
+    block.className = 'day-block';
+    block.setAttribute('data-day', day);
+
+    const head = document.createElement('div');
+    head.className = 'day-head';
+    head.innerHTML = '<span class="day-title">Día ' + day + '</span><span class="day-total">Subtotal: ' + fmtCost(dayTotal) + '</span>';
+    block.appendChild(head);
+
+    dayPlaces.forEach(function (item) {
+      const p = item.p, i = item.i;
+      const row = document.createElement('div');
+      row.className = 'place-row';
+      row.setAttribute('data-index', i);
+      row.setAttribute('data-category', p.category);
+      row.innerHTML =
+        '<div class="time-col">' + p.time + '</div>' +
+        '<span class="cat-dot" style="background:' + catColor(p.category) + '"></span>' +
+        '<div class="body">' +
+          '<div class="name-line">' + p.name + '<span class="zone-tag">' + p.zone + '</span></div>' +
+          (p.notes ? '<p class="notes">' + p.notes + '</p>' : '') +
+        '</div>' +
+        '<div class="cost-col">' + fmtCost(p.cost) + '</div>';
+      block.appendChild(row);
+      rowsByIndex[i] = row;
+
+      row.addEventListener('mouseenter', function () { markers[i].show(); });
+      row.addEventListener('mouseleave', function () { markers[i].hide(); });
+    });
+
+    dayList.appendChild(block);
+  });
+
+  // --- day filter chips ---
+  const dayFilters = document.getElementById('day-filters');
+  let activeDay = 'all';
+  const dayChips = [];
+  function makeChip(container, label, value, onClick) {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.type = 'button';
+    chip.innerHTML = label;
+    chip.addEventListener('click', function () { onClick(value, chip); });
+    container.appendChild(chip);
+    return chip;
+  }
+  const allDaysChip = makeChip(dayFilters, 'Todos', 'all', function (v, chip) { setDay(v, chip); });
+  allDaysChip.classList.add('is-active');
+  dayChips.push(allDaysChip);
+  days.forEach(function (day) {
+    const chip = makeChip(dayFilters, 'Día ' + day, day, function (v, chip) { setDay(v, chip); });
+    dayChips.push(chip);
+  });
+  function setDay(value, chip) {
+    activeDay = value;
+    dayChips.forEach(function (c) { c.classList.remove('is-active'); });
+    chip.classList.add('is-active');
+    applyFilters();
+  }
+
+  // --- category filter chips ---
+  const catFilters = document.getElementById('cat-filters');
+  let activeCat = 'all';
+  const catChips = [];
+  const allCatChip = makeChip(catFilters, 'Todas', 'all', function (v, chip) { setCat(v, chip); });
+  allCatChip.classList.add('is-active');
+  catChips.push(allCatChip);
+  Object.keys(CATEGORY_LABEL).forEach(function (cat) {
+    const dotHtml = '<span class="dot" style="background:' + catColor(cat) + '"></span>';
+    const chip = makeChip(catFilters, dotHtml + CATEGORY_LABEL[cat], cat, function (v, chip) { setCat(v, chip); });
+    catChips.push(chip);
+  });
+  function setCat(value, chip) {
+    activeCat = value;
+    catChips.forEach(function (c) { c.classList.remove('is-active'); });
+    chip.classList.add('is-active');
+    applyFilters();
+  }
+
+  // --- search + combined filtering ---
+  const searchInput = document.getElementById('search');
+  function applyFilters() {
+    const q = searchInput.value.trim().toLowerCase();
+    PLACES.forEach(function (p, i) {
+      const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.zone.toLowerCase().includes(q) || (p.notes || '').toLowerCase().includes(q);
+      const matchesDay = activeDay === 'all' || p.day === activeDay;
+      const matchesCat = activeCat === 'all' || p.category === activeCat;
+      const match = matchesSearch && matchesDay && matchesCat;
+
+      markers[i].el.classList.toggle('is-dimmed', !match);
+      const row = rowsByIndex[i];
+      if (row) row.classList.toggle('is-hidden', !match);
+    });
+
+    // hide day blocks with no visible rows
+    document.querySelectorAll('.day-block').forEach(function (block) {
+      const visibleRows = block.querySelectorAll('.place-row:not(.is-hidden)').length;
+      block.style.display = visibleRows === 0 ? 'none' : '';
+    });
+  }
+  searchInput.addEventListener('input', applyFilters);
+})();
+</script>
+</body>
+</html>
