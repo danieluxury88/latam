@@ -1,12 +1,13 @@
 {
   "trip": {
     "arrival": { "date": "2026-09-20", "time": "11:00" },
-    "departure": { "date": "2026-09-24", "time": "06:00" }
+    "departure": { "date": "2026-09-24", "time": "02:00" }
   },
   "places": [
     { "name": "Llegada — Aeropuerto JFK", "zone": "Queens (JFK)", "category": "transport", "date": "2026-09-20", "time": "11:00–12:30", "cost": 0, "lat": 40.6413, "lon": -73.7781, "notes": "Vuelo de llegada, migración y equipaje." },
     { "name": "Traslado al hotel (Upper West Side)", "zone": "Manhattan", "category": "transport", "date": "2026-09-20", "time": "12:30–13:30", "cost": 70, "lat": 40.7690, "lon": -73.9819, "notes": "Taxi/Uber o AirTrain + subte hasta la calle 63." },
-    { "name": "Check-in — West Side YMCA", "zone": "Manhattan", "category": "lodging", "date": "2026-09-20", "time": "13:30–14:30", "cost": 480, "lat": 40.7690, "lon": -73.9819, "notes": "5 W 63rd St, justo frente a Central Park. Costo estimado por las 4 noches del viaje." },
+    { "name": "Check-in — West Side YMCA", "zone": "Manhattan", "category": "lodging", "date": "2026-09-20", "time": "13:30–14:30", "cost": 480, "lat": 40.7690, "lon": -73.9819, "notes": "5 W 63rd St, justo frente a Central Park. Costo estimado por las 4 noches — ya pagado, no es un gasto pendiente." },
+    { "name": "Pase de subte (MetroCard/OMNY semanal)", "zone": "Manhattan", "category": "transport", "date": "2026-09-20", "time": "14:30–14:45", "cost": 34, "lat": 40.7690, "lon": -73.9819, "notes": "7-Day Unlimited por persona — cubre subte y colectivo el resto de la estadía. Se puede sacar en cualquier estación cercana al hotel." },
     { "name": "Central Park (paseo)", "zone": "Manhattan", "category": "sightseeing", "date": "2026-09-20", "time": "15:00–17:30", "cost": 0, "lat": 40.7829, "lon": -73.9654, "notes": "A pocas cuadras del hotel — buena forma de arrancar sin planear mucho el primer día.", "approx": true },
     { "name": "Cena — Upper West Side", "zone": "Manhattan", "category": "food", "date": "2026-09-20", "time": "19:00–20:30", "cost": 50, "lat": 40.7799, "lon": -73.9819, "notes": "Sin reserva.", "approx": true },
 
@@ -18,15 +19,16 @@
 
     { "name": "Ferry — Estatua de la Libertad / Ellis Island", "zone": "Manhattan", "category": "sightseeing", "date": "2026-09-22", "time": "09:00–13:00", "cost": 24, "lat": 40.7033, "lon": -74.0170, "notes": "Sale desde Battery Park, reservar el ferry con anticipación." },
     { "name": "Memorial y Museo del 11-S", "zone": "Manhattan", "category": "sightseeing", "date": "2026-09-22", "time": "13:30–15:00", "cost": 30, "lat": 40.7115, "lon": -74.0134, "notes": "" },
-    { "name": "Puente de Brooklyn", "zone": "Manhattan", "category": "sightseeing", "date": "2026-09-22", "time": "15:30–16:30", "cost": 0, "lat": 40.7061, "lon": -73.9969, "notes": "Cruzar a pie desde el lado de Manhattan." },
+    { "name": "Little Italy (paseo)", "zone": "Manhattan", "category": "sightseeing", "date": "2026-09-22", "time": "15:15–16:15", "cost": 15, "lat": 40.7191, "lon": -73.9973, "notes": "Mulberry St — a 15-20 min a pie desde el Memorial. Buen lugar para un café o algo dulce antes del puente.", "approx": true },
+    { "name": "Puente de Brooklyn", "zone": "Manhattan", "category": "sightseeing", "date": "2026-09-22", "time": "16:30–17:30", "cost": 0, "lat": 40.7061, "lon": -73.9969, "notes": "Cruzar a pie desde el lado de Manhattan." },
     { "name": "Cena en DUMBO, Brooklyn", "zone": "Brooklyn", "category": "food", "date": "2026-09-22", "time": "19:00–20:30", "cost": 60, "lat": 40.6997, "lon": -73.9862, "notes": "Vistas del puente y el perfil de Manhattan.", "approx": true },
 
     { "name": "Traslado a Jersey Gardens (NJ)", "zone": "Manhattan", "category": "transport", "date": "2026-09-23", "time": "10:00–11:00", "cost": 40, "lat": 40.7690, "lon": -73.9819, "notes": "Uber/shuttle desde el hotel, ~35-45 min." },
     { "name": "Jersey Gardens Outlets", "zone": "New Jersey", "category": "shopping", "date": "2026-09-23", "time": "11:00–17:00", "cost": 150, "lat": 40.6663, "lon": -74.1699, "notes": "Presupuesto estimado de compras — día dedicado a outlets en New Jersey." },
     { "name": "Liberty State Park (atardecer)", "zone": "New Jersey", "category": "sightseeing", "date": "2026-09-23", "time": "17:30–18:30", "cost": 0, "lat": 40.7093, "lon": -74.0554, "notes": "De regreso a Manhattan — vistas del skyline al atardecer. Depende de si queda tiempo/energía después de los outlets.", "status": "tentative" },
-    { "name": "Cena de despedida", "zone": "Manhattan", "category": "food", "date": "2026-09-23", "time": "19:30–21:00", "cost": 65, "lat": 40.7649, "lon": -73.9814, "notes": "Sin reserva.", "approx": true },
+    { "name": "Cena de despedida", "zone": "Manhattan", "category": "food", "date": "2026-09-23", "time": "19:00–20:30", "cost": 65, "lat": 40.7649, "lon": -73.9814, "notes": "Sin reserva. Adelantada media hora respecto al plan original para dejar margen antes del traslado al aeropuerto.", "approx": true },
+    { "name": "Check-out y traslado al JFK", "zone": "Manhattan", "category": "transport", "date": "2026-09-23", "time": "21:00–22:00", "cost": 70, "lat": 40.7690, "lon": -73.9819, "notes": "El vuelo de regreso sale a las 2:00 AM del jueves — hay que salir del hotel la noche del miércoles, no la mañana del jueves." },
 
-    { "name": "Check-out y traslado al JFK", "zone": "Manhattan", "category": "transport", "date": "2026-09-24", "time": "03:30–04:30", "cost": 70, "lat": 40.7690, "lon": -73.9819, "notes": "Salida muy temprana — el vuelo sale a las 6:00." },
-    { "name": "Salida — Vuelo de regreso", "zone": "Queens (JFK)", "category": "transport", "date": "2026-09-24", "time": "06:00", "cost": 0, "lat": 40.6413, "lon": -73.7781, "notes": "Llegar al aeropuerto con 2-3h de anticipación." }
+    { "name": "Salida — Vuelo de regreso", "zone": "Queens (JFK)", "category": "transport", "date": "2026-09-24", "time": "02:00", "cost": 0, "lat": 40.6413, "lon": -73.7781, "notes": "Llegar al aeropuerto con 2-3h de anticipación (~23:00–23:30 del miércoles). Espera nocturna en el aeropuerto antes del embarque." }
   ]
 }
