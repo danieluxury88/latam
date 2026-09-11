@@ -257,6 +257,27 @@
   .place-marker:focus-visible .label,
   .place-marker.is-active .label { opacity: 1; }
   .place-marker.is-dimmed { opacity: 0.2; }
+  .place-marker.is-excluded .dot { fill: var(--surface-1); stroke-dasharray: 2.5 2; opacity: 0.85; }
+  .place-marker.is-excluded .pulse { display: none; }
+
+  .route-line {
+    fill: none;
+    stroke: var(--series-1);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+    opacity: 0.55;
+    vector-effect: non-scaling-stroke;
+  }
+  .route-time-label {
+    font-size: 10px;
+    font-weight: 600;
+    fill: var(--text-secondary);
+    paint-order: stroke;
+    stroke: var(--surface-1);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    text-anchor: middle;
+  }
 
   .tooltip {
     position: absolute;
@@ -372,6 +393,38 @@
     font-weight: 700;
     padding-top: 1px;
   }
+  .place-row.is-tentative { background: color-mix(in srgb, var(--cat-other) 7%, transparent); }
+  .place-row.is-tentative.is-excluded { opacity: 0.55; }
+  .place-row .tentative-tag {
+    font-size: 0.68rem;
+    color: var(--cat-other);
+    border: 1px dashed var(--cat-other);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-weight: 500;
+  }
+  .place-row .tentative-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .place-row .tentative-toggle input { cursor: pointer; }
+  .place-row .approx-mark { color: var(--text-muted); font-weight: 500; }
+
+  .leg-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 16px 3px 121px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .leg-row .leg-icon { font-size: 0.85rem; }
 
   footer.note {
     margin-top: 14px;
@@ -414,11 +467,13 @@
   <div class="filters">
     <div class="chip-group" id="day-filters"><span class="chip-label">Día</span></div>
     <div class="chip-group" id="cat-filters"><span class="chip-label">Categoría</span></div>
+    <span class="chip-label" id="route-hint">Elegí un día para ver el recorrido estimado en el mapa</span>
   </div>
 
   <div class="map-card">
     <svg class="map" viewBox="0 0 800 640" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa de Manhattan, JFK y Nueva Jersey con lugares del itinerario">
       <g id="zone-layer"></g>
+      <g id="route-layer"></g>
       <g id="marker-layer"></g>
     </svg>
     <div class="legend" id="legend"></div>
@@ -494,8 +549,47 @@
     return getComputedStyle(document.documentElement).getPropertyValue('--cat-' + cat).trim() || 'var(--cat-other)';
   }
 
+  // --- distance / travel-time estimate between two points (straight-line, not real
+  // routing) — good enough to flag "this is a long hop" or "these two are next door" ---
+  function haversineKm(a, b) {
+    const R = 6371;
+    const toRad = function (d) { return d * Math.PI / 180; };
+    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+  }
+  function estimateLeg(a, b) {
+    const km = haversineKm(a, b);
+    let mode, speedKmh, overheadMin;
+    if (km <= 1.0) { mode = '🚶 A pie'; speedKmh = 4.5; overheadMin = 0; }
+    else if (km <= 3.0) { mode = '🚶 A pie / 🚇 subte'; speedKmh = 7; overheadMin = 5; }
+    else if (km <= 10) { mode = '🚇 Subte / 🚗 auto'; speedKmh = 16; overheadMin = 8; }
+    else { mode = '🚗 Auto (cruce entre estados)'; speedKmh = 30; overheadMin = 10; }
+    const minutes = Math.round(km / speedKmh * 60) + overheadMin;
+    return { km: km, mode: mode, minutes: minutes };
+  }
+  function parseStartMinutes(timeStr) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(timeStr || '');
+    return m ? (+m[1]) * 60 + (+m[2]) : 0;
+  }
+
+  // --- tentative places: which ones the user has opted into, persisted per-browser ---
+  function loadIncluded() {
+    try { return JSON.parse(localStorage.getItem('nyc-trip-included') || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveIncluded(map) {
+    try { localStorage.setItem('nyc-trip-included', JSON.stringify(map)); }
+    catch (e) { /* private browsing / storage disabled — toggle still works this session */ }
+  }
+  const includedMap = loadIncluded(); // { [placeName]: true }
+  function isActive(place) {
+    return place.status !== 'tentative' || includedMap[place.name] === true;
+  }
+
   const svgNS = "http://www.w3.org/2000/svg";
   const zoneLayer = document.getElementById('zone-layer');
+  const routeLayer = document.getElementById('route-layer');
   const markerLayer = document.getElementById('marker-layer');
   const tooltip = document.getElementById('tooltip');
   const mapCard = document.querySelector('.map-card');
@@ -563,6 +657,11 @@
         '  —  Salida: ' + formatShortDate(trip.departure.date) + ' · ' + trip.departure.time;
     }
 
+    // --- days, derived from each place's date (sorted chronologically) ---
+    const dates = Array.from(new Set(PLACES.map(function (p) { return p.date; }))).sort();
+    const dayIndex = {};
+    dates.forEach(function (d, i) { dayIndex[d] = i; });
+
     // --- markers ---
     const markers = [];
 
@@ -571,7 +670,7 @@
       const color = catColor(place.category);
 
       const g = document.createElementNS(svgNS, 'g');
-      g.setAttribute('class', 'place-marker');
+      g.setAttribute('class', 'place-marker' + (isActive(place) ? '' : ' is-excluded'));
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
       g.setAttribute('aria-label', place.name);
@@ -590,6 +689,7 @@
       dot.setAttribute('class', 'dot');
       dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 8);
       dot.setAttribute('fill', color);
+      dot.setAttribute('stroke', color);
 
       const label = document.createElementNS(svgNS, 'text');
       label.setAttribute('class', 'label');
@@ -607,11 +707,13 @@
       function show() {
         markers.forEach(function (m) { m.el.classList.remove('is-active'); });
         g.classList.add('is-active');
+        let zoneLine = place.zone + ' · ' + CATEGORY_LABEL[place.category];
+        if (place.status === 'tentative') zoneLine += ' · Tentativo (' + (isActive(place) ? 'incluido' : 'no incluido') + ')';
         document.getElementById('t-name').textContent = place.name;
-        document.getElementById('t-zone').textContent = place.zone + ' · ' + CATEGORY_LABEL[place.category];
+        document.getElementById('t-zone').textContent = zoneLine;
         document.getElementById('t-notes').textContent = place.notes || '';
         document.getElementById('t-day').textContent = 'Día ' + (dayIndex[place.date] + 1);
-        document.getElementById('t-time').textContent = place.time;
+        document.getElementById('t-time').textContent = (place.approx ? '~' : '') + place.time;
         document.getElementById('t-cost').textContent = fmtCost(place.cost);
 
         const cardRect = mapCard.getBoundingClientRect();
@@ -662,68 +764,148 @@
       item.innerHTML = '<span class="dot" style="background:' + catColor(cat) + '"></span>' + (CATEGORY_LABEL[cat] || cat);
       legend.appendChild(item);
     });
+    if (PLACES.some(function (p) { return p.status === 'tentative'; })) {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      item.innerHTML = '<span class="dot" style="background:transparent;border:1.5px dashed var(--text-muted)"></span>Tentativo, no incluido';
+      legend.appendChild(item);
+    }
 
-    // --- days, derived from each place's date (sorted chronologically) ---
-    const dates = Array.from(new Set(PLACES.map(function (p) { return p.date; }))).sort();
-    const dayIndex = {};
-    dates.forEach(function (d, i) { dayIndex[d] = i; });
+    // --- routes: straight-line path + estimated travel time between a day's active
+    // stops, in time order. Only drawn for one selected day (all-days would be a mess). ---
+    function drawRoutes() {
+      routeLayer.innerHTML = '';
+      const hint = document.getElementById('route-hint');
+      if (hint) hint.style.display = (activeDay === 'all') ? '' : 'none';
+      if (activeDay === 'all') return;
 
-    // --- summary bar ---
-    const totalCost = PLACES.reduce(function (sum, p) { return sum + (p.cost || 0); }, 0);
+      const ordered = PLACES
+        .filter(function (p) { return p.date === activeDay && isActive(p); })
+        .sort(function (a, b) { return parseStartMinutes(a.time) - parseStartMinutes(b.time); });
+      if (ordered.length < 2) return;
+
+      for (let k = 0; k < ordered.length - 1; k++) {
+        const a = ordered[k], b = ordered[k + 1];
+        const [x1, y1] = project(a.lon, a.lat);
+        const [x2, y2] = project(b.lon, b.lat);
+
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('class', 'route-line');
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+        routeLayer.appendChild(line);
+
+        const leg = estimateLeg(a, b);
+        const label = document.createElementNS(svgNS, 'text');
+        label.setAttribute('class', 'route-time-label');
+        label.setAttribute('x', (x1 + x2) / 2);
+        label.setAttribute('y', (y1 + y2) / 2 - 5);
+        label.textContent = '~' + leg.minutes + ' min';
+        routeLayer.appendChild(label);
+      }
+    }
+
+    // --- summary bar + itinerary list: re-rendered whenever a tentative item is
+    // toggled, since that changes totals, legs, and which stops count as "in the plan" ---
     const summaryBar = document.getElementById('summary-bar');
-    [
-      { val: dates.length, lbl: 'Días' },
-      { val: PLACES.length, lbl: 'Lugares' },
-      { val: fmtCost(totalCost), lbl: 'Costo estimado total' }
-    ].forEach(function (s) {
-      const card = document.createElement('div');
-      card.className = 'summary-card';
-      card.innerHTML = '<div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div>';
-      summaryBar.appendChild(card);
-    });
-
-    // --- itinerary list (grouped by day) ---
     const dayList = document.getElementById('day-list');
     const rowsByIndex = {};
 
-    dates.forEach(function (date, dayNum) {
-      const dayPlaces = PLACES
-        .map(function (p, i) { return { p: p, i: i }; })
-        .filter(function (item) { return item.p.date === date; });
-      const dayTotal = dayPlaces.reduce(function (sum, item) { return sum + (item.p.cost || 0); }, 0);
+    function renderAll() {
+      // the day-list DOM is about to be torn down and rebuilt — drop any open
+      // tooltip/active state tied to the old rows first, or it's left stuck on screen
+      tooltip.classList.remove('is-visible');
+      markers.forEach(function (m) { m.el.classList.remove('is-active'); });
 
-      const block = document.createElement('div');
-      block.className = 'day-block';
-      block.setAttribute('data-day', dayNum);
+      const activePlaces = PLACES.filter(isActive);
+      const totalCost = activePlaces.reduce(function (sum, p) { return sum + (p.cost || 0); }, 0);
+      const pending = PLACES.filter(function (p) { return p.status === 'tentative' && !isActive(p); }).length;
 
-      const head = document.createElement('div');
-      head.className = 'day-head';
-      head.innerHTML = '<span class="day-title">Día ' + (dayNum + 1) + ' · ' + formatShortDate(date) + '</span><span class="day-total">Subtotal: ' + fmtCost(dayTotal) + '</span>';
-      block.appendChild(head);
-
-      dayPlaces.forEach(function (item) {
-        const p = item.p, i = item.i;
-        const row = document.createElement('div');
-        row.className = 'place-row';
-        row.setAttribute('data-index', i);
-        row.setAttribute('data-category', p.category);
-        row.innerHTML =
-          '<div class="time-col">' + p.time + '</div>' +
-          '<span class="cat-dot" style="background:' + catColor(p.category) + '"></span>' +
-          '<div class="body">' +
-            '<div class="name-line">' + p.name + '<span class="zone-tag">' + p.zone + '</span></div>' +
-            (p.notes ? '<p class="notes">' + p.notes + '</p>' : '') +
-          '</div>' +
-          '<div class="cost-col">' + fmtCost(p.cost) + '</div>';
-        block.appendChild(row);
-        rowsByIndex[i] = row;
-
-        row.addEventListener('mouseenter', function () { markers[i].show(); });
-        row.addEventListener('mouseleave', function () { markers[i].hide(); });
+      summaryBar.innerHTML = '';
+      const cards = [
+        { val: dates.length, lbl: 'Días' },
+        { val: activePlaces.length, lbl: 'Lugares en el plan' },
+        { val: fmtCost(totalCost), lbl: 'Costo estimado total' }
+      ];
+      if (pending) cards.push({ val: pending, lbl: 'Tentativos sin confirmar' });
+      cards.forEach(function (s) {
+        const card = document.createElement('div');
+        card.className = 'summary-card';
+        card.innerHTML = '<div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div>';
+        summaryBar.appendChild(card);
       });
 
-      dayList.appendChild(block);
-    });
+      dayList.innerHTML = '';
+      dates.forEach(function (date, dayNum) {
+        const dayItems = PLACES
+          .map(function (p, i) { return { p: p, i: i }; })
+          .filter(function (item) { return item.p.date === date; })
+          .sort(function (a, b) { return parseStartMinutes(a.p.time) - parseStartMinutes(b.p.time); });
+        const dayTotal = dayItems.reduce(function (sum, item) { return isActive(item.p) ? sum + (item.p.cost || 0) : sum; }, 0);
+
+        const block = document.createElement('div');
+        block.className = 'day-block';
+        block.setAttribute('data-day', dayNum);
+
+        const head = document.createElement('div');
+        head.className = 'day-head';
+        head.innerHTML = '<span class="day-title">Día ' + (dayNum + 1) + ' · ' + formatShortDate(date) + '</span><span class="day-total">Subtotal: ' + fmtCost(dayTotal) + '</span>';
+        block.appendChild(head);
+
+        let prevActive = null;
+        dayItems.forEach(function (item) {
+          const p = item.p, i = item.i;
+          const active = isActive(p);
+
+          if (prevActive && active) {
+            const leg = estimateLeg(prevActive, p);
+            const legRow = document.createElement('div');
+            legRow.className = 'leg-row';
+            legRow.innerHTML = '<span class="leg-icon">' + leg.mode.split(' ')[0] + '</span><span>' +
+              leg.mode.replace(/^\S+\s*/, '') + ' — ~' + leg.minutes + ' min (' + leg.km.toFixed(1) + ' km en línea recta)</span>';
+            block.appendChild(legRow);
+          }
+
+          const row = document.createElement('div');
+          row.className = 'place-row' + (p.status === 'tentative' ? ' is-tentative' : '') + (!active ? ' is-excluded' : '');
+          row.setAttribute('data-index', i);
+          row.setAttribute('data-category', p.category);
+          const timeDisplay = (p.approx ? '<span class="approx-mark">~</span>' : '') + p.time;
+          const tentativeTag = p.status === 'tentative' ? '<span class="tentative-tag">Tentativo</span>' : '';
+          const tentativeControl = p.status === 'tentative'
+            ? '<label class="tentative-toggle"><input type="checkbox" data-toggle-index="' + i + '"' + (active ? ' checked' : '') + '> Incluir en el plan</label>'
+            : '';
+          row.innerHTML =
+            '<div class="time-col">' + timeDisplay + '</div>' +
+            '<span class="cat-dot" style="background:' + catColor(p.category) + '"></span>' +
+            '<div class="body">' +
+              '<div class="name-line">' + p.name + '<span class="zone-tag">' + p.zone + '</span>' + tentativeTag + tentativeControl + '</div>' +
+              (p.notes ? '<p class="notes">' + p.notes + '</p>' : '') +
+            '</div>' +
+            '<div class="cost-col">' + fmtCost(p.cost) + '</div>';
+          block.appendChild(row);
+          rowsByIndex[i] = row;
+
+          row.addEventListener('mouseenter', function () { markers[i].show(); });
+          row.addEventListener('mouseleave', function () { markers[i].hide(); });
+
+          const checkbox = row.querySelector('input[data-toggle-index]');
+          if (checkbox) {
+            checkbox.addEventListener('change', function () {
+              includedMap[p.name] = checkbox.checked;
+              saveIncluded(includedMap);
+              markers[i].el.classList.toggle('is-excluded', !isActive(p));
+              renderAll();
+              applyFilters();
+            });
+          }
+
+          if (active) prevActive = p;
+        });
+
+        dayList.appendChild(block);
+      });
+    }
 
     // --- day filter chips ---
     const dayFilters = document.getElementById('day-filters');
@@ -791,8 +973,13 @@
         const visibleRows = block.querySelectorAll('.place-row:not(.is-hidden)').length;
         block.style.display = visibleRows === 0 ? 'none' : '';
       });
+
+      drawRoutes();
     }
     searchInput.addEventListener('input', applyFilters);
+
+    renderAll();
+    applyFilters();
   }
 })();
 </script>
