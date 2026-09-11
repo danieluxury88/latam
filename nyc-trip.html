@@ -24,6 +24,7 @@
     --cat-food:       #d97a34;
     --cat-transport:  #7c5cd6;
     --cat-lodging:    #2f9e63;
+    --cat-shopping:   #c04b8a;
     --cat-other:      #8b897f;
   }
   @media (prefers-color-scheme: dark) {
@@ -46,6 +47,7 @@
       --cat-food:       #e79552;
       --cat-transport:  #9b82e8;
       --cat-lodging:    #4bbb85;
+      --cat-shopping:   #dd6fac;
       --cat-other:      #a3a196;
     }
   }
@@ -68,6 +70,7 @@
     --cat-food:       #e79552;
     --cat-transport:  #9b82e8;
     --cat-lodging:    #4bbb85;
+    --cat-shopping:   #dd6fac;
     --cat-other:      #a3a196;
   }
 
@@ -111,6 +114,7 @@
     text-decoration: none;
   }
   .crumb-link:hover { text-decoration: underline; }
+  .trip-meta { margin: 4px 0 0; font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; }
 
   .controls {
     display: flex;
@@ -143,6 +147,16 @@
     color: var(--text-muted);
     pointer-events: none;
   }
+
+  .load-error {
+    background: var(--cat-food);
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+  }
+  .load-error code { background: rgba(255,255,255,0.2); padding: 1px 5px; border-radius: 4px; }
 
   /* --- summary bar --- */
   .summary-bar {
@@ -382,7 +396,8 @@
     <div>
       <a class="crumb-link" href="index.html">← Latinoamérica</a>
       <h1>Nueva York — plan de viaje</h1>
-      <p class="subtitle">Manhattan, aeropuerto JFK y Nueva Jersey. Mapa esquemático (no a escala real) + itinerario día por día con horarios y costos estimados.</p>
+      <p class="subtitle">Manhattan, aeropuerto JFK y Nueva Jersey. Mapa con costas reales simplificadas + itinerario día por día con horarios y costos estimados.</p>
+      <p class="trip-meta" id="trip-meta"></p>
     </div>
     <div class="controls">
       <div class="search-box">
@@ -392,6 +407,8 @@
     </div>
   </header>
 
+  <div id="load-error" class="load-error" hidden>No se pudo cargar <code>itinerary.json</code>. Si abriste este archivo con doble clic (protocolo <code>file://</code>), el navegador bloquea esa carga por seguridad — abrí la carpeta con Live Server (o cualquier servidor local) y volvé a intentarlo.</div>
+
   <div class="summary-bar" id="summary-bar"></div>
 
   <div class="filters">
@@ -400,7 +417,7 @@
   </div>
 
   <div class="map-card">
-    <svg class="map" viewBox="0 0 820 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa esquemático de Manhattan, JFK y Nueva Jersey con lugares del itinerario">
+    <svg class="map" viewBox="0 0 800 640" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa de Manhattan, JFK y Nueva Jersey con lugares del itinerario">
       <g id="zone-layer"></g>
       <g id="marker-layer"></g>
     </svg>
@@ -422,47 +439,46 @@
     <div id="day-list"></div>
   </div>
 
-  <footer class="note">Datos de ejemplo — reemplaza y agrega lugares en el arreglo <code>PLACES</code> del script (nombre, zona, día, horario, costo, categoría, notas, lat/lon). El mapa, los filtros, el resumen de costos y el itinerario se generan automáticamente a partir de esa lista.</footer>
+  <footer class="note">Lugares y costos viven en <code>itinerary.json</code> (junto a este archivo) — editalo ahí, sin tocar el HTML: nombre, zona, categoría, fecha, horario, costo, lat/lon, notas. El mapa, los filtros, el resumen y el itinerario se generan automáticamente a partir de ese archivo. Requiere abrir la página con un servidor local (Live Server funciona bien) porque el navegador bloquea la carga de <code>itinerary.json</code> si abrís el HTML con doble clic.</footer>
 </div>
 
 <script>
 (function () {
-  // --- schematic zones (approximate lon/lat boxes, not real borders) ---
-  const ZONES = [
-    { name: "New Jersey",  lonMin: -74.28, lonMax: -74.03, latMin: 40.68, latMax: 40.90 },
-    { name: "Manhattan",   lonMin: -74.02, lonMax: -73.93, latMin: 40.695, latMax: 40.88 },
-    { name: "Harbor",      lonMin: -74.065, lonMax: -74.005, latMin: 40.665, latMax: 40.705 },
-    { name: "JFK / Queens",lonMin: -73.92, lonMax: -73.72, latMin: 40.60, latMax: 40.78 }
+  // --- landmasses: real county coastlines (Manhattan/Brooklyn/Queens/Staten Island +
+  // the NJ counties across the Hudson), simplified from the US Census/us-atlas TopoJSON
+  // (same idea as the LatAm page's traced country paths, extracted from real boundary
+  // data instead of hand-drawn). See labelAt/label for which ones get a text label. ---
+  const LANDMASSES = [
+    { label: "New Jersey", labelAt: [-74.09, 40.755],
+      points: [[-74.1461,40.7864],[-74.0995,40.776],[-74.0169,40.8233],[-73.9846,40.7992],[-74.0097,40.7649],[-74.0241,40.709],[-74.0456,40.6901],[-74.0708,40.6609],[-74.1605,40.6446],[-74.1138,40.703],[-74.121,40.7417],[-74.1677,40.7477],[-74.1461,40.7864]] },
+    { label: null, labelAt: null, // Essex (NJ)
+      points: [[-74.2718,40.8972],[-74.1318,40.8199],[-74.1461,40.7864],[-74.1677,40.7477],[-74.121,40.7417],[-74.1138,40.703],[-74.1354,40.6747],[-74.2107,40.691],[-74.2215,40.7073],[-74.2861,40.7219],[-74.3256,40.7168],[-74.35,40.7289],[-74.35,40.8051],[-74.3364,40.8138],[-74.3256,40.9083],[-74.2718,40.8972]] },
+    { label: null, labelAt: null, // Union (NJ) — Jersey Gardens outlets
+      points: [[-74.35,40.7289],[-74.3256,40.7168],[-74.2861,40.7219],[-74.2215,40.7073],[-74.2107,40.691],[-74.1354,40.6747],[-74.1605,40.6446],[-74.2036,40.6309],[-74.2036,40.5931],[-74.2143,40.6042],[-74.2897,40.5922],[-74.3041,40.6085],[-74.35,40.6058]] },
+    { label: null, labelAt: null, // Bergen (NJ)
+      points: [[-73.9158,40.92],[-73.9344,40.8817],[-73.9846,40.7992],[-74.0169,40.8233],[-74.0995,40.776],[-74.1461,40.7864],[-74.1318,40.8199],[-74.121,40.8585],[-74.1332,40.92]] },
+    { label: "Manhattan", labelAt: [-73.955, 40.79],
+      points: [[-74.0456,40.6901],[-74.0241,40.709],[-74.0097,40.7649],[-73.9846,40.7992],[-73.9344,40.8817],[-73.9057,40.8731],[-73.9344,40.8353],[-73.9128,40.7958],[-73.9631,40.7365],[-73.9738,40.709],[-74.0205,40.6807],[-74.0456,40.6901]] },
+    { label: "Brooklyn", labelAt: [-73.94, 40.62],
+      points: [[-74.0205,40.6807],[-73.9738,40.709],[-73.9631,40.7365],[-73.9272,40.7262],[-73.8949,40.6824],[-73.8698,40.6944],[-73.8554,40.6429],[-73.8339,40.6283],[-73.8482,40.5888],[-73.9344,40.569],[-74.0133,40.5742],[-74.0026,40.5956],[-74.042,40.6292],[-74.0205,40.6807]] },
+    { label: "Queens (JFK)", labelAt: [-73.79, 40.73],
+      points: [[-73.9128,40.7958],[-73.7872,40.8018],[-73.7693,40.8001],[-73.7011,40.7529],[-73.7262,40.7245],[-73.7262,40.6532],[-73.7693,40.624],[-73.7513,40.5896],[-73.8339,40.5776],[-73.9415,40.5432],[-73.9344,40.569],[-73.8482,40.5888],[-73.8339,40.6283],[-73.8554,40.6429],[-73.8698,40.6944],[-73.8949,40.6824],[-73.9272,40.7262],[-73.9631,40.7365],[-73.9128,40.7958]] },
+    { label: "Staten Island", labelAt: [-74.15, 40.575],
+      points: [[-74.2036,40.5931],[-74.2036,40.6309],[-74.1605,40.6446],[-74.0708,40.6609],[-74.0528,40.6034],[-74.0851,40.5699],[-74.1663,40.53],[-74.254,40.53],[-74.2502,40.545],[-74.2179,40.5587],[-74.2036,40.5931]] }
   ];
 
-  // --- editable trip data: add/remove places here ---
-  // category: "sightseeing" | "food" | "transport" | "lodging" | "other"
-  const PLACES = [
-    { name: "Llegada — Aeropuerto JFK", zone: "JFK / Queens", category: "transport", day: 1, time: "14:00–15:30", cost: 0, lat: 40.6413, lon: -73.7781, notes: "Vuelo de llegada, migración y equipaje." },
-    { name: "Traslado a Manhattan", zone: "Manhattan", category: "transport", day: 1, time: "15:30–16:30", cost: 70, lat: 40.7549, lon: -73.9840, notes: "Taxi/Uber o AirTrain + subte hasta Midtown." },
-    { name: "Check-in hotel (Midtown)", zone: "Manhattan", category: "lodging", day: 1, time: "16:30–17:30", cost: 220, lat: 40.7549, lon: -73.9840, notes: "Hotel de ejemplo — reemplazar con la reserva real." },
-    { name: "Cena en Hell's Kitchen", zone: "Manhattan", category: "food", day: 1, time: "19:00–20:30", cost: 55, lat: 40.7638, lon: -73.9918, notes: "Zona con muchas opciones, no necesita reserva." },
-
-    { name: "Times Square", zone: "Manhattan", category: "sightseeing", day: 2, time: "09:00–10:00", cost: 0, lat: 40.7580, lon: -73.9855, notes: "Mejor temprano, antes de la multitud." },
-    { name: "Empire State Building", zone: "Manhattan", category: "sightseeing", day: 2, time: "10:30–12:00", cost: 45, lat: 40.7484, lon: -73.9857, notes: "Comprar entrada con horario anticipado." },
-    { name: "Central Park", zone: "Manhattan", category: "sightseeing", day: 2, time: "14:00–16:30", cost: 0, lat: 40.7829, lon: -73.9654, notes: "Caminata / alquiler de bicicletas opcional." },
-    { name: "Show de Broadway", zone: "Manhattan", category: "other", day: 2, time: "19:30–22:00", cost: 120, lat: 40.7590, lon: -73.9845, notes: "Reservar entradas con anticipación." },
-
-    { name: "Ferry — Estatua de la Libertad / Ellis Island", zone: "Harbor", category: "sightseeing", day: 3, time: "09:00–13:00", cost: 24, lat: 40.7033, lon: -74.0170, notes: "Sale desde Battery Park, reservar ferry con anticipación." },
-    { name: "Puente de Brooklyn", zone: "Manhattan", category: "sightseeing", day: 3, time: "15:00–16:00", cost: 0, lat: 40.7061, lon: -73.9969, notes: "Cruzar a pie desde el lado de Manhattan." },
-    { name: "Liberty State Park, NJ", zone: "New Jersey", category: "sightseeing", day: 3, time: "17:00–18:30", cost: 0, lat: 40.7093, lon: -74.0554, notes: "Vistas del perfil urbano de Manhattan al atardecer." },
-
-    { name: "Jersey City — Journal Square", zone: "New Jersey", category: "other", day: 4, time: "10:00–12:00", cost: 20, lat: 40.7328, lon: -74.0639, notes: "Paseo y almuerzo." },
-    { name: "Check-out del hotel", zone: "Manhattan", category: "lodging", day: 4, time: "12:30–13:00", cost: 0, lat: 40.7549, lon: -73.9840, notes: "" },
-    { name: "Traslado a JFK", zone: "JFK / Queens", category: "transport", day: 4, time: "14:00–15:00", cost: 70, lat: 40.6413, lon: -73.7781, notes: "" },
-    { name: "Salida — Aeropuerto JFK", zone: "JFK / Queens", category: "transport", day: 4, time: "17:00", cost: 0, lat: 40.6413, lon: -73.7781, notes: "Vuelo de regreso." }
+  // small harbor islands, drawn for context (not filterable zones)
+  const ISLANDS = [
+    { name: "Liberty Island", lon: -74.0445, lat: 40.6892, r: 5 },
+    { name: "Ellis Island", lon: -74.0396, lat: 40.6994, r: 4 },
+    { name: "Governors Island", lon: -74.0169, lat: 40.6895, r: 6 }
   ];
 
-  const CATEGORY_LABEL = { sightseeing: "Turismo", food: "Comida", transport: "Transporte", lodging: "Alojamiento", other: "Otro" };
+  const CATEGORY_LABEL = { sightseeing: "Turismo", food: "Comida", transport: "Transporte", lodging: "Alojamiento", shopping: "Compras", other: "Otro" };
 
-  const W = 820, H = 560;
-  const LON_MIN = -74.30, LON_MAX = -73.70;
-  const LAT_MIN = 40.58, LAT_MAX = 40.92;
+  const W = 800, H = 640;
+  const LON_MIN = -74.35, LON_MAX = -73.70;
+  const LAT_MIN = 40.53, LAT_MAX = 40.92;
 
   function project(lon, lat) {
     const x = (lon - LON_MIN) / (LON_MAX - LON_MIN) * W;
@@ -485,252 +501,299 @@
   const mapCard = document.querySelector('.map-card');
   const svgEl = document.querySelector('svg.map');
 
-  // --- draw schematic zones ---
-  ZONES.forEach(function (z) {
-    const [x1, y1] = project(z.lonMin, z.latMax);
-    const [x2, y2] = project(z.lonMax, z.latMin);
-    const rect = document.createElementNS(svgNS, 'rect');
-    rect.setAttribute('class', 'zone-rect');
-    rect.setAttribute('x', Math.min(x1, x2));
-    rect.setAttribute('y', Math.min(y1, y2));
-    rect.setAttribute('width', Math.abs(x2 - x1));
-    rect.setAttribute('height', Math.abs(y2 - y1));
-    rect.setAttribute('rx', 22);
-    zoneLayer.appendChild(rect);
+  // --- draw landmasses (real coastline shapes, not boxes) ---
+  LANDMASSES.forEach(function (land) {
+    const d = land.points.map(function (pt, idx) {
+      const [x, y] = project(pt[0], pt[1]);
+      return (idx === 0 ? 'M ' : 'L ') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ') + ' Z';
 
-    const label = document.createElementNS(svgNS, 'text');
-    label.setAttribute('class', 'zone-label');
-    label.setAttribute('x', Math.min(x1, x2) + 14);
-    label.setAttribute('y', Math.min(y1, y2) + 22);
-    label.textContent = z.name;
-    zoneLayer.appendChild(label);
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('class', 'zone-rect');
+    path.setAttribute('d', d);
+    zoneLayer.appendChild(path);
+
+    if (land.label) {
+      const [lx, ly] = project(land.labelAt[0], land.labelAt[1]);
+      const label = document.createElementNS(svgNS, 'text');
+      label.setAttribute('class', 'zone-label');
+      label.setAttribute('x', lx);
+      label.setAttribute('y', ly);
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = land.label;
+      zoneLayer.appendChild(label);
+    }
   });
 
-  // --- markers ---
-  const markers = [];
+  // --- draw small harbor islands (decorative context, not filterable) ---
+  ISLANDS.forEach(function (isl) {
+    const [x, y] = project(isl.lon, isl.lat);
+    const circle = document.createElementNS(svgNS, 'circle');
+    circle.setAttribute('class', 'zone-rect');
+    circle.setAttribute('cx', x);
+    circle.setAttribute('cy', y);
+    circle.setAttribute('r', isl.r);
+    zoneLayer.appendChild(circle);
+  });
 
-  PLACES.forEach(function (place, i) {
-    const [x, y] = project(place.lon, place.lat);
-    const color = catColor(place.category);
+  function formatShortDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
 
-    const g = document.createElementNS(svgNS, 'g');
-    g.setAttribute('class', 'place-marker');
-    g.setAttribute('tabindex', '0');
-    g.setAttribute('role', 'button');
-    g.setAttribute('aria-label', place.name);
-    g.setAttribute('data-index', i);
+  // --- everything below depends on itinerary.json (places + trip meta) ---
+  fetch('itinerary.json')
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(init)
+    .catch(function (err) {
+      console.error('No se pudo cargar itinerary.json:', err);
+      document.getElementById('load-error').hidden = false;
+    });
 
-    const pulse = document.createElementNS(svgNS, 'circle');
-    pulse.setAttribute('class', 'pulse');
-    pulse.setAttribute('cx', x); pulse.setAttribute('cy', y); pulse.setAttribute('r', 16);
-    pulse.setAttribute('fill', color);
+  function init(data) {
+    const PLACES = data.places;
+    const trip = data.trip || {};
 
-    const hit = document.createElementNS(svgNS, 'circle');
-    hit.setAttribute('class', 'hit');
-    hit.setAttribute('cx', x); hit.setAttribute('cy', y); hit.setAttribute('r', 18);
+    if (trip.arrival && trip.departure) {
+      document.getElementById('trip-meta').textContent =
+        'Llegada: ' + formatShortDate(trip.arrival.date) + ' · ' + trip.arrival.time +
+        '  —  Salida: ' + formatShortDate(trip.departure.date) + ' · ' + trip.departure.time;
+    }
 
-    const dot = document.createElementNS(svgNS, 'circle');
-    dot.setAttribute('class', 'dot');
-    dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 8);
-    dot.setAttribute('fill', color);
+    // --- markers ---
+    const markers = [];
 
-    const label = document.createElementNS(svgNS, 'text');
-    label.setAttribute('class', 'label');
-    label.setAttribute('x', x);
-    label.setAttribute('y', y - 14);
-    label.setAttribute('text-anchor', 'middle');
-    label.textContent = place.name;
+    PLACES.forEach(function (place, i) {
+      const [x, y] = project(place.lon, place.lat);
+      const color = catColor(place.category);
 
-    g.appendChild(pulse);
-    g.appendChild(hit);
-    g.appendChild(dot);
-    g.appendChild(label);
-    markerLayer.appendChild(g);
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'place-marker');
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', place.name);
+      g.setAttribute('data-index', i);
 
-    function show() {
-      markers.forEach(function (m) { m.el.classList.remove('is-active'); });
-      g.classList.add('is-active');
-      document.getElementById('t-name').textContent = place.name;
-      document.getElementById('t-zone').textContent = place.zone + ' · ' + CATEGORY_LABEL[place.category];
-      document.getElementById('t-notes').textContent = place.notes || '';
-      document.getElementById('t-day').textContent = 'Día ' + place.day;
-      document.getElementById('t-time').textContent = place.time;
-      document.getElementById('t-cost').textContent = fmtCost(place.cost);
+      const pulse = document.createElementNS(svgNS, 'circle');
+      pulse.setAttribute('class', 'pulse');
+      pulse.setAttribute('cx', x); pulse.setAttribute('cy', y); pulse.setAttribute('r', 16);
+      pulse.setAttribute('fill', color);
 
-      const cardRect = mapCard.getBoundingClientRect();
-      const svgRect = svgEl.getBoundingClientRect();
-      const scale = svgRect.width / W;
-      const px = (svgRect.left - cardRect.left) + x * scale;
-      const py = (svgRect.top - cardRect.top) + y * scale;
+      const hit = document.createElementNS(svgNS, 'circle');
+      hit.setAttribute('class', 'hit');
+      hit.setAttribute('cx', x); hit.setAttribute('cy', y); hit.setAttribute('r', 18);
 
-      tooltip.classList.add('is-visible');
-      tooltip.style.left = px + 'px';
-      tooltip.style.top = py + 'px';
+      const dot = document.createElementNS(svgNS, 'circle');
+      dot.setAttribute('class', 'dot');
+      dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 8);
+      dot.setAttribute('fill', color);
 
-      requestAnimationFrame(function () {
-        const tRect = tooltip.getBoundingClientRect();
-        const cRect = mapCard.getBoundingClientRect();
-        let shiftX = 0;
-        if (tRect.left < cRect.left + 8) shiftX = (cRect.left + 8) - tRect.left;
-        if (tRect.right > cRect.right - 8) shiftX = (cRect.right - 8) - tRect.right;
-        tooltip.style.transform = shiftX !== 0 ? 'translate(calc(-50% + ' + shiftX + 'px), -16px)' : '';
-        tooltip.style.top = (py - tRect.height) + 'px';
+      const label = document.createElementNS(svgNS, 'text');
+      label.setAttribute('class', 'label');
+      label.setAttribute('x', x);
+      label.setAttribute('y', y - 14);
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = place.name;
+
+      g.appendChild(pulse);
+      g.appendChild(hit);
+      g.appendChild(dot);
+      g.appendChild(label);
+      markerLayer.appendChild(g);
+
+      function show() {
+        markers.forEach(function (m) { m.el.classList.remove('is-active'); });
+        g.classList.add('is-active');
+        document.getElementById('t-name').textContent = place.name;
+        document.getElementById('t-zone').textContent = place.zone + ' · ' + CATEGORY_LABEL[place.category];
+        document.getElementById('t-notes').textContent = place.notes || '';
+        document.getElementById('t-day').textContent = 'Día ' + (dayIndex[place.date] + 1);
+        document.getElementById('t-time').textContent = place.time;
+        document.getElementById('t-cost').textContent = fmtCost(place.cost);
+
+        const cardRect = mapCard.getBoundingClientRect();
+        const svgRect = svgEl.getBoundingClientRect();
+        const scale = svgRect.width / W;
+        const px = (svgRect.left - cardRect.left) + x * scale;
+        const py = (svgRect.top - cardRect.top) + y * scale;
+
+        tooltip.classList.add('is-visible');
+        tooltip.style.left = px + 'px';
+        tooltip.style.top = py + 'px';
+
+        requestAnimationFrame(function () {
+          const tRect = tooltip.getBoundingClientRect();
+          const cRect = mapCard.getBoundingClientRect();
+          let shiftX = 0;
+          if (tRect.left < cRect.left + 8) shiftX = (cRect.left + 8) - tRect.left;
+          if (tRect.right > cRect.right - 8) shiftX = (cRect.right - 8) - tRect.right;
+          tooltip.style.transform = shiftX !== 0 ? 'translate(calc(-50% + ' + shiftX + 'px), -16px)' : '';
+          tooltip.style.top = (py - tRect.height) + 'px';
+        });
+
+        const row = document.querySelector('.place-row[data-index="' + i + '"]');
+        if (row) row.classList.add('is-active');
+      }
+      function hide() {
+        g.classList.remove('is-active');
+        tooltip.classList.remove('is-visible');
+        tooltip.style.transform = 'translate(-50%, -10px)';
+        const row = document.querySelector('.place-row[data-index="' + i + '"]');
+        if (row) row.classList.remove('is-active');
+      }
+
+      g.addEventListener('mouseenter', show);
+      g.addEventListener('mouseleave', hide);
+      g.addEventListener('focus', show);
+      g.addEventListener('blur', hide);
+
+      markers.push({ el: g, place: place, show: show, hide: hide });
+    });
+
+    // --- legend (category colors actually used in this trip) ---
+    const usedCats = Array.from(new Set(PLACES.map(function (p) { return p.category; })));
+    const legend = document.getElementById('legend');
+    usedCats.forEach(function (cat) {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      item.innerHTML = '<span class="dot" style="background:' + catColor(cat) + '"></span>' + (CATEGORY_LABEL[cat] || cat);
+      legend.appendChild(item);
+    });
+
+    // --- days, derived from each place's date (sorted chronologically) ---
+    const dates = Array.from(new Set(PLACES.map(function (p) { return p.date; }))).sort();
+    const dayIndex = {};
+    dates.forEach(function (d, i) { dayIndex[d] = i; });
+
+    // --- summary bar ---
+    const totalCost = PLACES.reduce(function (sum, p) { return sum + (p.cost || 0); }, 0);
+    const summaryBar = document.getElementById('summary-bar');
+    [
+      { val: dates.length, lbl: 'Días' },
+      { val: PLACES.length, lbl: 'Lugares' },
+      { val: fmtCost(totalCost), lbl: 'Costo estimado total' }
+    ].forEach(function (s) {
+      const card = document.createElement('div');
+      card.className = 'summary-card';
+      card.innerHTML = '<div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div>';
+      summaryBar.appendChild(card);
+    });
+
+    // --- itinerary list (grouped by day) ---
+    const dayList = document.getElementById('day-list');
+    const rowsByIndex = {};
+
+    dates.forEach(function (date, dayNum) {
+      const dayPlaces = PLACES
+        .map(function (p, i) { return { p: p, i: i }; })
+        .filter(function (item) { return item.p.date === date; });
+      const dayTotal = dayPlaces.reduce(function (sum, item) { return sum + (item.p.cost || 0); }, 0);
+
+      const block = document.createElement('div');
+      block.className = 'day-block';
+      block.setAttribute('data-day', dayNum);
+
+      const head = document.createElement('div');
+      head.className = 'day-head';
+      head.innerHTML = '<span class="day-title">Día ' + (dayNum + 1) + ' · ' + formatShortDate(date) + '</span><span class="day-total">Subtotal: ' + fmtCost(dayTotal) + '</span>';
+      block.appendChild(head);
+
+      dayPlaces.forEach(function (item) {
+        const p = item.p, i = item.i;
+        const row = document.createElement('div');
+        row.className = 'place-row';
+        row.setAttribute('data-index', i);
+        row.setAttribute('data-category', p.category);
+        row.innerHTML =
+          '<div class="time-col">' + p.time + '</div>' +
+          '<span class="cat-dot" style="background:' + catColor(p.category) + '"></span>' +
+          '<div class="body">' +
+            '<div class="name-line">' + p.name + '<span class="zone-tag">' + p.zone + '</span></div>' +
+            (p.notes ? '<p class="notes">' + p.notes + '</p>' : '') +
+          '</div>' +
+          '<div class="cost-col">' + fmtCost(p.cost) + '</div>';
+        block.appendChild(row);
+        rowsByIndex[i] = row;
+
+        row.addEventListener('mouseenter', function () { markers[i].show(); });
+        row.addEventListener('mouseleave', function () { markers[i].hide(); });
       });
 
-      const row = document.querySelector('.place-row[data-index="' + i + '"]');
-      if (row) row.classList.add('is-active');
+      dayList.appendChild(block);
+    });
+
+    // --- day filter chips ---
+    const dayFilters = document.getElementById('day-filters');
+    let activeDay = 'all';
+    const dayChips = [];
+    function makeChip(container, label, value, onClick) {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.type = 'button';
+      chip.innerHTML = label;
+      chip.addEventListener('click', function () { onClick(value, chip); });
+      container.appendChild(chip);
+      return chip;
     }
-    function hide() {
-      g.classList.remove('is-active');
-      tooltip.classList.remove('is-visible');
-      tooltip.style.transform = 'translate(-50%, -10px)';
-      const row = document.querySelector('.place-row[data-index="' + i + '"]');
-      if (row) row.classList.remove('is-active');
+    const allDaysChip = makeChip(dayFilters, 'Todos', 'all', function (v, chip) { setDay(v, chip); });
+    allDaysChip.classList.add('is-active');
+    dayChips.push(allDaysChip);
+    dates.forEach(function (date, dayNum) {
+      const chip = makeChip(dayFilters, 'Día ' + (dayNum + 1), date, function (v, chip) { setDay(v, chip); });
+      dayChips.push(chip);
+    });
+    function setDay(value, chip) {
+      activeDay = value;
+      dayChips.forEach(function (c) { c.classList.remove('is-active'); });
+      chip.classList.add('is-active');
+      applyFilters();
     }
 
-    g.addEventListener('mouseenter', show);
-    g.addEventListener('mouseleave', hide);
-    g.addEventListener('focus', show);
-    g.addEventListener('blur', hide);
-
-    markers.push({ el: g, place: place, show: show, hide: hide });
-  });
-
-  // --- legend (category colors) ---
-  const legend = document.getElementById('legend');
-  Object.keys(CATEGORY_LABEL).forEach(function (cat) {
-    const item = document.createElement('span');
-    item.className = 'legend-item';
-    item.innerHTML = '<span class="dot" style="background:' + catColor(cat) + '"></span>' + CATEGORY_LABEL[cat];
-    legend.appendChild(item);
-  });
-
-  // --- summary bar ---
-  const days = Array.from(new Set(PLACES.map(function (p) { return p.day; }))).sort(function (a, b) { return a - b; });
-  const totalCost = PLACES.reduce(function (sum, p) { return sum + (p.cost || 0); }, 0);
-  const summaryBar = document.getElementById('summary-bar');
-  [
-    { val: days.length, lbl: 'Días' },
-    { val: PLACES.length, lbl: 'Lugares' },
-    { val: fmtCost(totalCost), lbl: 'Costo estimado total' }
-  ].forEach(function (s) {
-    const card = document.createElement('div');
-    card.className = 'summary-card';
-    card.innerHTML = '<div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div>';
-    summaryBar.appendChild(card);
-  });
-
-  // --- itinerary list (grouped by day) ---
-  const dayList = document.getElementById('day-list');
-  const rowsByIndex = {};
-
-  days.forEach(function (day) {
-    const dayPlaces = PLACES
-      .map(function (p, i) { return { p: p, i: i }; })
-      .filter(function (item) { return item.p.day === day; });
-    const dayTotal = dayPlaces.reduce(function (sum, item) { return sum + (item.p.cost || 0); }, 0);
-
-    const block = document.createElement('div');
-    block.className = 'day-block';
-    block.setAttribute('data-day', day);
-
-    const head = document.createElement('div');
-    head.className = 'day-head';
-    head.innerHTML = '<span class="day-title">Día ' + day + '</span><span class="day-total">Subtotal: ' + fmtCost(dayTotal) + '</span>';
-    block.appendChild(head);
-
-    dayPlaces.forEach(function (item) {
-      const p = item.p, i = item.i;
-      const row = document.createElement('div');
-      row.className = 'place-row';
-      row.setAttribute('data-index', i);
-      row.setAttribute('data-category', p.category);
-      row.innerHTML =
-        '<div class="time-col">' + p.time + '</div>' +
-        '<span class="cat-dot" style="background:' + catColor(p.category) + '"></span>' +
-        '<div class="body">' +
-          '<div class="name-line">' + p.name + '<span class="zone-tag">' + p.zone + '</span></div>' +
-          (p.notes ? '<p class="notes">' + p.notes + '</p>' : '') +
-        '</div>' +
-        '<div class="cost-col">' + fmtCost(p.cost) + '</div>';
-      block.appendChild(row);
-      rowsByIndex[i] = row;
-
-      row.addEventListener('mouseenter', function () { markers[i].show(); });
-      row.addEventListener('mouseleave', function () { markers[i].hide(); });
+    // --- category filter chips ---
+    const catFilters = document.getElementById('cat-filters');
+    let activeCat = 'all';
+    const catChips = [];
+    const allCatChip = makeChip(catFilters, 'Todas', 'all', function (v, chip) { setCat(v, chip); });
+    allCatChip.classList.add('is-active');
+    catChips.push(allCatChip);
+    usedCats.forEach(function (cat) {
+      const dotHtml = '<span class="dot" style="background:' + catColor(cat) + '"></span>';
+      const chip = makeChip(catFilters, dotHtml + (CATEGORY_LABEL[cat] || cat), cat, function (v, chip) { setCat(v, chip); });
+      catChips.push(chip);
     });
+    function setCat(value, chip) {
+      activeCat = value;
+      catChips.forEach(function (c) { c.classList.remove('is-active'); });
+      chip.classList.add('is-active');
+      applyFilters();
+    }
 
-    dayList.appendChild(block);
-  });
+    // --- search + combined filtering ---
+    const searchInput = document.getElementById('search');
+    function applyFilters() {
+      const q = searchInput.value.trim().toLowerCase();
+      PLACES.forEach(function (p, i) {
+        const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.zone.toLowerCase().includes(q) || (p.notes || '').toLowerCase().includes(q);
+        const matchesDay = activeDay === 'all' || p.date === activeDay;
+        const matchesCat = activeCat === 'all' || p.category === activeCat;
+        const match = matchesSearch && matchesDay && matchesCat;
 
-  // --- day filter chips ---
-  const dayFilters = document.getElementById('day-filters');
-  let activeDay = 'all';
-  const dayChips = [];
-  function makeChip(container, label, value, onClick) {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.type = 'button';
-    chip.innerHTML = label;
-    chip.addEventListener('click', function () { onClick(value, chip); });
-    container.appendChild(chip);
-    return chip;
+        markers[i].el.classList.toggle('is-dimmed', !match);
+        const row = rowsByIndex[i];
+        if (row) row.classList.toggle('is-hidden', !match);
+      });
+
+      // hide day blocks with no visible rows
+      document.querySelectorAll('.day-block').forEach(function (block) {
+        const visibleRows = block.querySelectorAll('.place-row:not(.is-hidden)').length;
+        block.style.display = visibleRows === 0 ? 'none' : '';
+      });
+    }
+    searchInput.addEventListener('input', applyFilters);
   }
-  const allDaysChip = makeChip(dayFilters, 'Todos', 'all', function (v, chip) { setDay(v, chip); });
-  allDaysChip.classList.add('is-active');
-  dayChips.push(allDaysChip);
-  days.forEach(function (day) {
-    const chip = makeChip(dayFilters, 'Día ' + day, day, function (v, chip) { setDay(v, chip); });
-    dayChips.push(chip);
-  });
-  function setDay(value, chip) {
-    activeDay = value;
-    dayChips.forEach(function (c) { c.classList.remove('is-active'); });
-    chip.classList.add('is-active');
-    applyFilters();
-  }
-
-  // --- category filter chips ---
-  const catFilters = document.getElementById('cat-filters');
-  let activeCat = 'all';
-  const catChips = [];
-  const allCatChip = makeChip(catFilters, 'Todas', 'all', function (v, chip) { setCat(v, chip); });
-  allCatChip.classList.add('is-active');
-  catChips.push(allCatChip);
-  Object.keys(CATEGORY_LABEL).forEach(function (cat) {
-    const dotHtml = '<span class="dot" style="background:' + catColor(cat) + '"></span>';
-    const chip = makeChip(catFilters, dotHtml + CATEGORY_LABEL[cat], cat, function (v, chip) { setCat(v, chip); });
-    catChips.push(chip);
-  });
-  function setCat(value, chip) {
-    activeCat = value;
-    catChips.forEach(function (c) { c.classList.remove('is-active'); });
-    chip.classList.add('is-active');
-    applyFilters();
-  }
-
-  // --- search + combined filtering ---
-  const searchInput = document.getElementById('search');
-  function applyFilters() {
-    const q = searchInput.value.trim().toLowerCase();
-    PLACES.forEach(function (p, i) {
-      const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.zone.toLowerCase().includes(q) || (p.notes || '').toLowerCase().includes(q);
-      const matchesDay = activeDay === 'all' || p.day === activeDay;
-      const matchesCat = activeCat === 'all' || p.category === activeCat;
-      const match = matchesSearch && matchesDay && matchesCat;
-
-      markers[i].el.classList.toggle('is-dimmed', !match);
-      const row = rowsByIndex[i];
-      if (row) row.classList.toggle('is-hidden', !match);
-    });
-
-    // hide day blocks with no visible rows
-    document.querySelectorAll('.day-block').forEach(function (block) {
-      const visibleRows = block.querySelectorAll('.place-row:not(.is-hidden)').length;
-      block.style.display = visibleRows === 0 ? 'none' : '';
-    });
-  }
-  searchInput.addEventListener('input', applyFilters);
 })();
 </script>
 </body>
