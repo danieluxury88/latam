@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tour Quito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&display=swap" />
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --hairline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --terrain:        #e4ecdf;
+    --land:           #f3f4ec;
+    --land-border:    #d5ddcc;
+    --equator:        #d97a34;
+    --series-1:       #2a78d6;
+    --series-1-soft:  rgba(42,120,214,0.16);
+    --card-shadow:    0 12px 32px rgba(11,11,11,0.14), 0 2px 8px rgba(11,11,11,0.08);
+    --cat-sightseeing:#2a78d6;
+    --cat-food:       #d97a34;
+    --cat-transport:  #7c5cd6;
+    --cat-lodging:    #2f9e63;
+    --cat-shopping:   #c04b8a;
+    --cat-other:      #8b897f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #8f8d84;
+      --hairline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --terrain:        #16211a;
+      --land:           #232720;
+      --land-border:    #33422f;
+      --equator:        #e79552;
+      --series-1:       #3987e5;
+      --series-1-soft:  rgba(57,135,229,0.22);
+      --card-shadow:    0 12px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.35);
+      --cat-sightseeing:#4c94e8;
+      --cat-food:       #e79552;
+      --cat-transport:  #9b82e8;
+      --cat-lodging:    #4bbb85;
+      --cat-shopping:   #dd6fac;
+      --cat-other:      #a3a196;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #8f8d84;
+    --hairline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.10);
+    --terrain:        #16211a;
+    --land:           #232720;
+    --land-border:    #33422f;
+    --equator:        #e79552;
+    --series-1:       #3987e5;
+    --series-1-soft:  rgba(57,135,229,0.22);
+    --card-shadow:    0 12px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.35);
+    --cat-sightseeing:#4c94e8;
+    --cat-food:       #e79552;
+    --cat-transport:  #9b82e8;
+    --cat-lodging:    #4bbb85;
+    --cat-shopping:   #dd6fac;
+    --cat-other:      #a3a196;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .app {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 20px 40px;
+  }
+
+  header.app-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    max-width: 52ch;
+  }
+  .crumb-link {
+    display: inline-block;
+    font-size: 0.78rem;
+    color: var(--series-1);
+    text-decoration: none;
+  }
+  .crumb-link:hover { text-decoration: underline; }
+  .trip-meta { margin: 4px 0 0; font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .search-box { position: relative; }
+  .search-box input {
+    width: 200px;
+    padding: 9px 12px 9px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    outline: none;
+  }
+  .search-box input:focus {
+    border-color: var(--series-1);
+    box-shadow: 0 0 0 3px var(--series-1-soft);
+  }
+  .search-box svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .load-error {
+    background: var(--cat-food);
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+  }
+  .load-error code { background: rgba(255,255,255,0.2); padding: 1px 5px; border-radius: 4px; }
+
+  /* --- summary bar --- */
+  .summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .summary-card {
+    flex: 1 1 140px;
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .summary-card .val { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+  .summary-card .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  /* --- filter chips --- */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip-group .chip-label { font-size: 0.72rem; color: var(--text-muted); margin-right: 2px; }
+  .chip {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .chip:hover { border-color: var(--series-1); }
+  .chip.is-active {
+    background: var(--series-1);
+    border-color: var(--series-1);
+    color: #fff;
+  }
+  .chip .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* --- map --- */
+  .map-card {
+    position: relative;
+    background: var(--terrain);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  svg.map { display: block; width: 100%; height: auto; }
+  .zone-rect { fill: var(--land); stroke: var(--land-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .zone-label {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+  .equator-line {
+    fill: none;
+    stroke: var(--equator);
+    stroke-width: 2;
+    stroke-dasharray: 10 7;
+    opacity: 0.7;
+    vector-effect: non-scaling-stroke;
+  }
+  .equator-label {
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--equator);
+    paint-order: stroke;
+    stroke: var(--surface-1);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  .place-marker { cursor: pointer; outline: none; }
+  .place-marker .pulse { opacity: 0.18; transform-origin: center; transform-box: fill-box; }
+  .place-marker .dot {
+    stroke: var(--surface-1);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    transition: transform 120ms ease;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .place-marker .hit { fill: transparent; }
+  .place-marker .label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--text-primary);
+    paint-order: stroke;
+    stroke: var(--surface-1);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 120ms ease;
+    pointer-events: none;
+  }
+  .place-marker:hover .dot,
+  .place-marker:focus-visible .dot,
+  .place-marker.is-active .dot { transform: scale(1.4); }
+  .place-marker:hover .label,
+  .place-marker:focus-visible .label,
+  .place-marker.is-active .label { opacity: 1; }
+  .place-marker.is-dimmed { opacity: 0.2; }
+  .place-marker.is-excluded .dot { fill: var(--surface-1); stroke-dasharray: 2.5 2; opacity: 0.85; }
+  .place-marker.is-excluded .pulse { display: none; }
+
+  .route-line {
+    fill: none;
+    stroke: var(--series-1);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+    opacity: 0.55;
+    vector-effect: non-scaling-stroke;
+  }
+  .route-time-label {
+    font-size: 10px;
+    font-weight: 600;
+    fill: var(--text-secondary);
+    paint-order: stroke;
+    stroke: var(--surface-1);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    text-anchor: middle;
+  }
+
+  .tooltip {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    min-width: 220px;
+    max-width: 270px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 14px 16px;
+    opacity: 0;
+    transform: translate(-50%, -10px);
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .tooltip.is-visible { opacity: 1; transform: translate(-50%, -16px); }
+  .tooltip .t-name { font-size: 0.98rem; font-weight: 700; margin: 0 0 2px; }
+  .tooltip .t-zone { font-size: 0.76rem; color: var(--text-muted); margin: 0 0 8px; }
+  .tooltip .t-notes { font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); margin: 0 0 10px; }
+  .tooltip .t-stats { display: flex; gap: 12px; border-top: 1px solid var(--hairline); padding-top: 9px; flex-wrap: wrap; }
+  .tooltip .t-stat .val { font-size: 0.85rem; font-weight: 700; }
+  .tooltip .t-stat .lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  .legend {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--card-shadow);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-item .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* --- itinerary --- */
+  .itinerary h2 { font-size: 1.1rem; margin: 0 0 12px; }
+  .day-block {
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .day-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--page);
+  }
+  .day-head .day-title { font-weight: 700; font-size: 0.95rem; }
+  .day-head .day-total { font-size: 0.8rem; color: var(--text-muted); }
+  .place-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--hairline);
+    transition: background 120ms ease;
+  }
+  .place-row:last-child { border-bottom: none; }
+  .place-row:hover, .place-row.is-active { background: var(--series-1-soft); }
+  .place-row.is-hidden { display: none; }
+  .place-row .time-col {
+    flex: 0 0 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding-top: 1px;
+  }
+  .place-row .cat-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex: 0 0 9px;
+  }
+  .place-row .body { flex: 1; min-width: 0; }
+  .place-row .name-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .place-row .zone-tag {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-weight: 500;
+  }
+  .place-row .notes {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 2px 0 0;
+  }
+  .place-row .cost-col {
+    flex: 0 0 64px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding-top: 1px;
+  }
+  .place-row.is-tentative { background: color-mix(in srgb, var(--cat-other) 7%, transparent); }
+  .place-row.is-tentative.is-excluded { opacity: 0.55; }
+  .place-row .tentative-tag {
+    font-size: 0.68rem;
+    color: var(--cat-other);
+    border: 1px dashed var(--cat-other);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-weight: 500;
+  }
+  .place-row .tentative-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .place-row .tentative-toggle input { cursor: pointer; }
+  .place-row .approx-mark { color: var(--text-muted); font-weight: 500; }
+
+  .leg-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 16px 3px 121px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .leg-row .leg-icon { font-size: 0.85rem; }
+
+  footer.note {
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  /* --- site footer: version + SeriousDesign --- */
+  .site-footer {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .site-footer .sd-brand {
+    font-family: "Protest Guerrilla", sans-serif;
+    font-size: 1.02rem;
+    letter-spacing: -0.3px;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .site-footer .sd-brand:hover { color: var(--series-1); }
+
+  @media (max-width: 640px) {
+    .controls { width: 100%; }
+    .search-box { flex: 1; }
+    .search-box input { width: 100%; }
+    .legend { position: static; margin: 10px 12px 0; box-shadow: none; border: none; border-top: 1px solid var(--hairline); border-radius: 0; padding: 10px 4px 4px; }
+    .place-row { flex-wrap: wrap; }
+    .place-row .time-col { flex: 0 0 auto; }
+    .place-row .cost-col { flex: 0 0 auto; margin-left: 15px; text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div>
+      <a class="crumb-link" href="index.html">← Latinoamérica</a>
+      <h1>Quito — plan de viaje</h1>
+      <p class="subtitle">Centro Histórico, La Mariscal, TelefériQo, Mitad del Mundo y el aeropuerto en Tababela. Mapa esquemático del valle + itinerario día por día con horarios y costos estimados (USD).</p>
+      <p class="trip-meta" id="trip-meta"></p>
+    </div>
+    <div class="controls">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Buscar lugar…" autocomplete="off" />
+      </div>
+    </div>
+  </header>
+
+  <div id="load-error" class="load-error" hidden>No se pudo cargar <code>quito-itinerary.json</code>. Si abriste este archivo con doble clic (protocolo <code>file://</code>), el navegador bloquea esa carga por seguridad — abrí la carpeta con Live Server (o cualquier servidor local) y volvé a intentarlo.</div>
+
+  <div class="summary-bar" id="summary-bar"></div>
+
+  <div class="filters">
+    <div class="chip-group" id="day-filters"><span class="chip-label">Día</span></div>
+    <div class="chip-group" id="cat-filters"><span class="chip-label">Categoría</span></div>
+    <span class="chip-label" id="route-hint">Elegí un día para ver el recorrido estimado en el mapa</span>
+  </div>
+
+  <div class="map-card">
+    <svg class="map" viewBox="0 0 800 830" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa esquemático de Quito, el TelefériQo, Mitad del Mundo y el aeropuerto con lugares del itinerario">
+      <g id="zone-layer"></g>
+      <g id="route-layer"></g>
+      <g id="marker-layer"></g>
+    </svg>
+    <div class="legend" id="legend"></div>
+    <div class="tooltip" id="tooltip" role="status" aria-live="polite">
+      <p class="t-name" id="t-name"></p>
+      <p class="t-zone" id="t-zone"></p>
+      <p class="t-notes" id="t-notes"></p>
+      <div class="t-stats">
+        <div class="t-stat"><div class="val" id="t-day"></div><div class="lbl">Día</div></div>
+        <div class="t-stat"><div class="val" id="t-time"></div><div class="lbl">Horario</div></div>
+        <div class="t-stat"><div class="val" id="t-cost"></div><div class="lbl">Costo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="itinerary">
+    <h2>Itinerario</h2>
+    <div id="day-list"></div>
+  </div>
+
+  <footer class="note">Lugares y costos viven en <code>quito-itinerary.json</code> (junto a este archivo) — editalo ahí, sin tocar el HTML: nombre, zona, categoría, fecha, horario, costo, lat/lon, notas. El mapa, los filtros, el resumen y el itinerario se generan automáticamente a partir de ese archivo. Requiere abrir la página con un servidor local (Live Server funciona bien) porque el navegador bloquea la carga del JSON si abrís el HTML con doble clic.</footer>
+
+  <footer class="site-footer">
+    <span>latam.seriousdesign.net · v1.2.0</span>
+    <span>Hecho por <a class="sd-brand" href="https://seriousdesign.net" target="_blank" rel="noopener">SeriousDesign</a></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  // --- zones: schematic shapes of the Quito valley (the city is a long N-S strip
+  // squeezed between the Pichincha massif and the eastern hills), the Tababela
+  // airport blob to the east and San Antonio de Pichincha (Mitad del Mundo) to
+  // the north. Hand-simplified from the city's geography, same role as the
+  // traced coastlines on the NYC page. See labelAt/label for text labels. ---
+  const LANDMASSES = [
+    { label: "Volcán Pichincha", labelAt: [-78.585, -0.185],
+      points: [[-78.635,-0.255],[-78.615,-0.215],[-78.605,-0.185],[-78.61,-0.15],[-78.60,-0.12],[-78.585,-0.10],[-78.565,-0.11],[-78.55,-0.13],[-78.535,-0.15],[-78.545,-0.175],[-78.53,-0.20],[-78.535,-0.235],[-78.555,-0.265],[-78.635,-0.255]] },
+    { label: "Quito", labelAt: [-78.462, -0.152],
+      points: [[-78.50,-0.258],[-78.515,-0.245],[-78.525,-0.22],[-78.52,-0.195],[-78.525,-0.17],[-78.515,-0.15],[-78.50,-0.13],[-78.48,-0.11],[-78.468,-0.09],[-78.462,-0.068],[-78.472,-0.05],[-78.488,-0.038],[-78.455,-0.042],[-78.445,-0.062],[-78.442,-0.088],[-78.448,-0.112],[-78.455,-0.138],[-78.462,-0.165],[-78.475,-0.19],[-78.49,-0.212],[-78.503,-0.238]] },
+    { label: "Tababela (UIO)", labelAt: [-78.36, -0.128],
+      points: [[-78.377,-0.115],[-78.36,-0.111],[-78.346,-0.117],[-78.343,-0.13],[-78.35,-0.147],[-78.366,-0.15],[-78.377,-0.14]] },
+    { label: "San Antonio de Pichincha", labelAt: [-78.492, -0.012],
+      points: [[-78.475,-0.022],[-78.462,-0.017],[-78.445,-0.02],[-78.44,-0.008],[-78.448,0.002],[-78.464,0.004],[-78.475,-0.005]] }
+  ];
+
+  const CATEGORY_LABEL = { sightseeing: "Turismo", food: "Comida", transport: "Transporte", lodging: "Alojamiento", shopping: "Compras", other: "Otro" };
+
+  const W = 800, H = 830;
+  const LON_MIN = -78.60, LON_MAX = -78.33;
+  const LAT_MIN = -0.26, LAT_MAX = 0.02;
+
+  function project(lon, lat) {
+    const x = (lon - LON_MIN) / (LON_MAX - LON_MIN) * W;
+    const y = (LAT_MAX - lat) / (LAT_MAX - LAT_MIN) * H;
+    return [x, y];
+  }
+
+  function fmtCost(n) {
+    if (!n) return "Gratis";
+    return "$" + n.toLocaleString('en-US');
+  }
+  function catColor(cat) {
+    return getComputedStyle(document.documentElement).getPropertyValue('--cat-' + cat).trim() || 'var(--cat-other)';
+  }
+
+  // --- distance / travel-time estimate between two points (straight-line, not real
+  // routing) — good enough to flag "this is a long hop" or "these two are next door" ---
+  function haversineKm(a, b) {
+    const R = 6371;
+    const toRad = function (d) { return d * Math.PI / 180; };
+    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+  }
+  function estimateLeg(a, b) {
+    const km = haversineKm(a, b);
+    let mode, speedKmh, overheadMin;
+    if (km <= 1.0) { mode = '🚶 A pie'; speedKmh = 4.5; overheadMin = 0; }
+    else if (km <= 3.0) { mode = '🚶 A pie / 🚖 taxi'; speedKmh = 9; overheadMin = 4; }
+    else if (km <= 10) { mode = '🚇 Metro / 🚌 bus / 🚖 taxi'; speedKmh = 14; overheadMin = 8; }
+    else { mode = '🚖 Taxi / auto (tramo largo)'; speedKmh = 30; overheadMin = 10; }
+    const minutes = Math.round(km / speedKmh * 60) + overheadMin;
+    return { km: km, mode: mode, minutes: minutes };
+  }
+  function parseStartMinutes(timeStr) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(timeStr || '');
+    return m ? (+m[1]) * 60 + (+m[2]) : 0;
+  }
+
+  // --- tentative places: which ones the user has opted into, persisted per-browser ---
+  function loadIncluded() {
+    try { return JSON.parse(localStorage.getItem('quito-trip-included') || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveIncluded(map) {
+    try { localStorage.setItem('quito-trip-included', JSON.stringify(map)); }
+    catch (e) { /* private browsing / storage disabled — toggle still works this session */ }
+  }
+  const includedMap = loadIncluded(); // { [placeName]: true }
+  function isActive(place) {
+    return place.status !== 'tentative' || includedMap[place.name] === true;
+  }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const zoneLayer = document.getElementById('zone-layer');
+  const routeLayer = document.getElementById('route-layer');
+  const markerLayer = document.getElementById('marker-layer');
+  const tooltip = document.getElementById('tooltip');
+  const mapCard = document.querySelector('.map-card');
+  const svgEl = document.querySelector('svg.map');
+
+  // --- draw zones (schematic valley shapes, not boxes) ---
+  LANDMASSES.forEach(function (land) {
+    const d = land.points.map(function (pt, idx) {
+      const [x, y] = project(pt[0], pt[1]);
+      return (idx === 0 ? 'M ' : 'L ') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ') + ' Z';
+
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('class', 'zone-rect');
+    path.setAttribute('d', d);
+    zoneLayer.appendChild(path);
+
+    if (land.label) {
+      const [lx, ly] = project(land.labelAt[0], land.labelAt[1]);
+      const label = document.createElementNS(svgNS, 'text');
+      label.setAttribute('class', 'zone-label');
+      label.setAttribute('x', lx);
+      label.setAttribute('y', ly);
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = land.label;
+      zoneLayer.appendChild(label);
+    }
+  });
+
+  // --- equator line: the whole point of a trip through Quito ---
+  (function drawEquator() {
+    const [x1, y] = project(LON_MIN + 0.01, 0);
+    const [x2] = project(LON_MAX - 0.01, 0);
+    const line = document.createElementNS(svgNS, 'line');
+    line.setAttribute('class', 'equator-line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y);
+    zoneLayer.appendChild(line);
+
+    const label = document.createElementNS(svgNS, 'text');
+    label.setAttribute('class', 'equator-label');
+    label.setAttribute('x', x1);
+    label.setAttribute('y', y - 7);
+    label.textContent = 'Línea del Ecuador (0°)';
+    zoneLayer.appendChild(label);
+  })();
+
+  function formatShortDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('es-EC', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  // --- everything below depends on quito-itinerary.json (places + trip meta) ---
+  fetch('quito-itinerary.json')
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(init)
+    .catch(function (err) {
+      console.error('No se pudo cargar quito-itinerary.json:', err);
+      document.getElementById('load-error').hidden = false;
+    });
+
+  function init(data) {
+    const PLACES = data.places;
+    const trip = data.trip || {};
+
+    if (trip.arrival && trip.departure) {
+      document.getElementById('trip-meta').textContent =
+        'Llegada: ' + formatShortDate(trip.arrival.date) + ' · ' + trip.arrival.time +
+        '  —  Salida: ' + formatShortDate(trip.departure.date) + ' · ' + trip.departure.time;
+    }
+
+    // --- days, derived from each place's date (sorted chronologically) ---
+    const dates = Array.from(new Set(PLACES.map(function (p) { return p.date; }))).sort();
+    const dayIndex = {};
+    dates.forEach(function (d, i) { dayIndex[d] = i; });
+
+    // --- markers ---
+    const markers = [];
+
+    PLACES.forEach(function (place, i) {
+      const [x, y] = project(place.lon, place.lat);
+      const color = catColor(place.category);
+
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'place-marker' + (isActive(place) ? '' : ' is-excluded'));
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', place.name);
+      g.setAttribute('data-index', i);
+
+      const pulse = document.createElementNS(svgNS, 'circle');
+      pulse.setAttribute('class', 'pulse');
+      pulse.setAttribute('cx', x); pulse.setAttribute('cy', y); pulse.setAttribute('r', 16);
+      pulse.setAttribute('fill', color);
+
+      const hit = document.createElementNS(svgNS, 'circle');
+      hit.setAttribute('class', 'hit');
+      hit.setAttribute('cx', x); hit.setAttribute('cy', y); hit.setAttribute('r', 18);
+
+      const dot = document.createElementNS(svgNS, 'circle');
+      dot.setAttribute('class', 'dot');
+      dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 8);
+      dot.setAttribute('fill', color);
+      dot.setAttribute('stroke', color);
+
+      const label = document.createElementNS(svgNS, 'text');
+      label.setAttribute('class', 'label');
+      label.setAttribute('x', x);
+      label.setAttribute('y', y - 14);
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = place.name;
+
+      g.appendChild(pulse);
+      g.appendChild(hit);
+      g.appendChild(dot);
+      g.appendChild(label);
+      markerLayer.appendChild(g);
+
+      function show() {
+        markers.forEach(function (m) { m.el.classList.remove('is-active'); });
+        g.classList.add('is-active');
+        let zoneLine = place.zone + ' · ' + CATEGORY_LABEL[place.category];
+        if (place.status === 'tentative') zoneLine += ' · Tentativo (' + (isActive(place) ? 'incluido' : 'no incluido') + ')';
+        document.getElementById('t-name').textContent = place.name;
+        document.getElementById('t-zone').textContent = zoneLine;
+        document.getElementById('t-notes').textContent = place.notes || '';
+        document.getElementById('t-day').textContent = 'Día ' + (dayIndex[place.date] + 1);
+        document.getElementById('t-time').textContent = (place.approx ? '~' : '') + place.time;
+        document.getElementById('t-cost').textContent = fmtCost(place.cost);
+
+        const cardRect = mapCard.getBoundingClientRect();
+        const svgRect = svgEl.getBoundingClientRect();
+        const scale = svgRect.width / W;
+        const px = (svgRect.left - cardRect.left) + x * scale;
+        const py = (svgRect.top - cardRect.top) + y * scale;
+
+        tooltip.classList.add('is-visible');
+        tooltip.style.left = px + 'px';
+        tooltip.style.top = py + 'px';
+
+        requestAnimationFrame(function () {
+          const tRect = tooltip.getBoundingClientRect();
+          const cRect = mapCard.getBoundingClientRect();
+          let shiftX = 0;
+          if (tRect.left < cRect.left + 8) shiftX = (cRect.left + 8) - tRect.left;
+          if (tRect.right > cRect.right - 8) shiftX = (cRect.right - 8) - tRect.right;
+          tooltip.style.transform = shiftX !== 0 ? 'translate(calc(-50% + ' + shiftX + 'px), -16px)' : '';
+          tooltip.style.top = (py - tRect.height) + 'px';
+        });
+
+        const row = document.querySelector('.place-row[data-index="' + i + '"]');
+        if (row) row.classList.add('is-active');
+      }
+      function hide() {
+        g.classList.remove('is-active');
+        tooltip.classList.remove('is-visible');
+        tooltip.style.transform = 'translate(-50%, -10px)';
+        const row = document.querySelector('.place-row[data-index="' + i + '"]');
+        if (row) row.classList.remove('is-active');
+      }
+
+      g.addEventListener('mouseenter', show);
+      g.addEventListener('mouseleave', hide);
+      g.addEventListener('focus', show);
+      g.addEventListener('blur', hide);
+
+      markers.push({ el: g, place: place, show: show, hide: hide });
+    });
+
+    // --- legend (category colors actually used in this trip) ---
+    const usedCats = Array.from(new Set(PLACES.map(function (p) { return p.category; })));
+    const legend = document.getElementById('legend');
+    usedCats.forEach(function (cat) {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      item.innerHTML = '<span class="dot" style="background:' + catColor(cat) + '"></span>' + (CATEGORY_LABEL[cat] || cat);
+      legend.appendChild(item);
+    });
+    if (PLACES.some(function (p) { return p.status === 'tentative'; })) {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      item.innerHTML = '<span class="dot" style="background:transparent;border:1.5px dashed var(--text-muted)"></span>Tentativo, no incluido';
+      legend.appendChild(item);
+    }
+
+    // --- routes: straight-line path + estimated travel time between a day's active
+    // stops, in time order. Only drawn for one selected day (all-days would be a mess). ---
+    function drawRoutes() {
+      routeLayer.innerHTML = '';
+      const hint = document.getElementById('route-hint');
+      if (hint) hint.style.display = (activeDay === 'all') ? '' : 'none';
+      if (activeDay === 'all') return;
+
+      const ordered = PLACES
+        .filter(function (p) { return p.date === activeDay && isActive(p); })
+        .sort(function (a, b) { return parseStartMinutes(a.time) - parseStartMinutes(b.time); });
+      if (ordered.length < 2) return;
+
+      for (let k = 0; k < ordered.length - 1; k++) {
+        const a = ordered[k], b = ordered[k + 1];
+        const [x1, y1] = project(a.lon, a.lat);
+        const [x2, y2] = project(b.lon, b.lat);
+
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('class', 'route-line');
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+        routeLayer.appendChild(line);
+
+        const leg = estimateLeg(a, b);
+        const label = document.createElementNS(svgNS, 'text');
+        label.setAttribute('class', 'route-time-label');
+        label.setAttribute('x', (x1 + x2) / 2);
+        label.setAttribute('y', (y1 + y2) / 2 - 5);
+        label.textContent = '~' + leg.minutes + ' min';
+        routeLayer.appendChild(label);
+      }
+    }
+
+    // --- summary bar + itinerary list: re-rendered whenever a tentative item is
+    // toggled, since that changes totals, legs, and which stops count as "in the plan" ---
+    const summaryBar = document.getElementById('summary-bar');
+    const dayList = document.getElementById('day-list');
+    const rowsByIndex = {};
+
+    function renderAll() {
+      // the day-list DOM is about to be torn down and rebuilt — drop any open
+      // tooltip/active state tied to the old rows first, or it's left stuck on screen
+      tooltip.classList.remove('is-visible');
+      markers.forEach(function (m) { m.el.classList.remove('is-active'); });
+
+      const activePlaces = PLACES.filter(isActive);
+      const totalCost = activePlaces.reduce(function (sum, p) { return sum + (p.cost || 0); }, 0);
+      const pending = PLACES.filter(function (p) { return p.status === 'tentative' && !isActive(p); }).length;
+
+      summaryBar.innerHTML = '';
+      const cards = [
+        { val: dates.length, lbl: 'Días' },
+        { val: activePlaces.length, lbl: 'Lugares en el plan' },
+        { val: fmtCost(totalCost), lbl: 'Costo estimado total (USD)' }
+      ];
+      if (pending) cards.push({ val: pending, lbl: 'Tentativos sin confirmar' });
+      cards.forEach(function (s) {
+        const card = document.createElement('div');
+        card.className = 'summary-card';
+        card.innerHTML = '<div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div>';
+        summaryBar.appendChild(card);
+      });
+
+      dayList.innerHTML = '';
+      dates.forEach(function (date, dayNum) {
+        const dayItems = PLACES
+          .map(function (p, i) { return { p: p, i: i }; })
+          .filter(function (item) { return item.p.date === date; })
+          .sort(function (a, b) { return parseStartMinutes(a.p.time) - parseStartMinutes(b.p.time); });
+        const dayTotal = dayItems.reduce(function (sum, item) { return isActive(item.p) ? sum + (item.p.cost || 0) : sum; }, 0);
+
+        const block = document.createElement('div');
+        block.className = 'day-block';
+        block.setAttribute('data-day', dayNum);
+
+        const head = document.createElement('div');
+        head.className = 'day-head';
+        head.innerHTML = '<span class="day-title">Día ' + (dayNum + 1) + ' · ' + formatShortDate(date) + '</span><span class="day-total">Subtotal: ' + fmtCost(dayTotal) + '</span>';
+        block.appendChild(head);
+
+        let prevActive = null;
+        dayItems.forEach(function (item) {
+          const p = item.p, i = item.i;
+          const active = isActive(p);
+
+          if (prevActive && active) {
+            const leg = estimateLeg(prevActive, p);
+            const legRow = document.createElement('div');
+            legRow.className = 'leg-row';
+            legRow.innerHTML = '<span class="leg-icon">' + leg.mode.split(' ')[0] + '</span><span>' +
+              leg.mode.replace(/^\S+\s*/, '') + ' — ~' + leg.minutes + ' min (' + leg.km.toFixed(1) + ' km en línea recta)</span>';
+            block.appendChild(legRow);
+          }
+
+          const row = document.createElement('div');
+          row.className = 'place-row' + (p.status === 'tentative' ? ' is-tentative' : '') + (!active ? ' is-excluded' : '');
+          row.setAttribute('data-index', i);
+          row.setAttribute('data-category', p.category);
+          const timeDisplay = (p.approx ? '<span class="approx-mark">~</span>' : '') + p.time;
+          const tentativeTag = p.status === 'tentative' ? '<span class="tentative-tag">Tentativo</span>' : '';
+          const tentativeControl = p.status === 'tentative'
+            ? '<label class="tentative-toggle"><input type="checkbox" data-toggle-index="' + i + '"' + (active ? ' checked' : '') + '> Incluir en el plan</label>'
+            : '';
+          row.innerHTML =
+            '<div class="time-col">' + timeDisplay + '</div>' +
+            '<span class="cat-dot" style="background:' + catColor(p.category) + '"></span>' +
+            '<div class="body">' +
+              '<div class="name-line">' + p.name + '<span class="zone-tag">' + p.zone + '</span>' + tentativeTag + tentativeControl + '</div>' +
+              (p.notes ? '<p class="notes">' + p.notes + '</p>' : '') +
+            '</div>' +
+            '<div class="cost-col">' + fmtCost(p.cost) + '</div>';
+          block.appendChild(row);
+          rowsByIndex[i] = row;
+
+          row.addEventListener('mouseenter', function () { markers[i].show(); });
+          row.addEventListener('mouseleave', function () { markers[i].hide(); });
+
+          const checkbox = row.querySelector('input[data-toggle-index]');
+          if (checkbox) {
+            checkbox.addEventListener('change', function () {
+              includedMap[p.name] = checkbox.checked;
+              saveIncluded(includedMap);
+              markers[i].el.classList.toggle('is-excluded', !isActive(p));
+              renderAll();
+              applyFilters();
+            });
+          }
+
+          if (active) prevActive = p;
+        });
+
+        dayList.appendChild(block);
+      });
+    }
+
+    // --- day filter chips ---
+    const dayFilters = document.getElementById('day-filters');
+    let activeDay = 'all';
+    const dayChips = [];
+    function makeChip(container, label, value, onClick) {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.type = 'button';
+      chip.innerHTML = label;
+      chip.addEventListener('click', function () { onClick(value, chip); });
+      container.appendChild(chip);
+      return chip;
+    }
+    const allDaysChip = makeChip(dayFilters, 'Todos', 'all', function (v, chip) { setDay(v, chip); });
+    allDaysChip.classList.add('is-active');
+    dayChips.push(allDaysChip);
+    dates.forEach(function (date, dayNum) {
+      const chip = makeChip(dayFilters, 'Día ' + (dayNum + 1), date, function (v, chip) { setDay(v, chip); });
+      dayChips.push(chip);
+    });
+    function setDay(value, chip) {
+      activeDay = value;
+      dayChips.forEach(function (c) { c.classList.remove('is-active'); });
+      chip.classList.add('is-active');
+      applyFilters();
+    }
+
+    // --- category filter chips ---
+    const catFilters = document.getElementById('cat-filters');
+    let activeCat = 'all';
+    const catChips = [];
+    const allCatChip = makeChip(catFilters, 'Todas', 'all', function (v, chip) { setCat(v, chip); });
+    allCatChip.classList.add('is-active');
+    catChips.push(allCatChip);
+    usedCats.forEach(function (cat) {
+      const dotHtml = '<span class="dot" style="background:' + catColor(cat) + '"></span>';
+      const chip = makeChip(catFilters, dotHtml + (CATEGORY_LABEL[cat] || cat), cat, function (v, chip) { setCat(v, chip); });
+      catChips.push(chip);
+    });
+    function setCat(value, chip) {
+      activeCat = value;
+      catChips.forEach(function (c) { c.classList.remove('is-active'); });
+      chip.classList.add('is-active');
+      applyFilters();
+    }
+
+    // --- search + combined filtering ---
+    const searchInput = document.getElementById('search');
+    function applyFilters() {
+      const q = searchInput.value.trim().toLowerCase();
+      PLACES.forEach(function (p, i) {
+        const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.zone.toLowerCase().includes(q) || (p.notes || '').toLowerCase().includes(q);
+        const matchesDay = activeDay === 'all' || p.date === activeDay;
+        const matchesCat = activeCat === 'all' || p.category === activeCat;
+        const match = matchesSearch && matchesDay && matchesCat;
+
+        markers[i].el.classList.toggle('is-dimmed', !match);
+        const row = rowsByIndex[i];
+        if (row) row.classList.toggle('is-hidden', !match);
+      });
+
+      // hide day blocks with no visible rows
+      document.querySelectorAll('.day-block').forEach(function (block) {
+        const visibleRows = block.querySelectorAll('.place-row:not(.is-hidden)').length;
+        block.style.display = visibleRows === 0 ? 'none' : '';
+      });
+
+      drawRoutes();
+    }
+    searchInput.addEventListener('input', applyFilters);
+
+    renderAll();
+    applyFilters();
+  }
+})();
+</script>
+</body>
+</html>

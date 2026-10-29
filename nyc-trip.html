@@ -4,6 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tour Nueva York</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&display=swap" />
 <style>
   :root {
     color-scheme: light;
@@ -432,6 +435,28 @@
     color: var(--text-muted);
   }
 
+  /* --- site footer: version + SeriousDesign --- */
+  .site-footer {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .site-footer .sd-brand {
+    font-family: "Protest Guerrilla", sans-serif;
+    font-size: 1.02rem;
+    letter-spacing: -0.3px;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .site-footer .sd-brand:hover { color: var(--series-1); }
+
   @media (max-width: 640px) {
     .controls { width: 100%; }
     .search-box { flex: 1; }
@@ -495,6 +520,11 @@
   </div>
 
   <footer class="note">Lugares y costos viven en <code>itinerary.json</code> (junto a este archivo) — editalo ahí, sin tocar el HTML: nombre, zona, categoría, fecha, horario, costo, lat/lon, notas. El mapa, los filtros, el resumen y el itinerario se generan automáticamente a partir de ese archivo. Requiere abrir la página con un servidor local (Live Server funciona bien) porque el navegador bloquea la carga de <code>itinerary.json</code> si abrís el HTML con doble clic.</footer>
+
+  <footer class="site-footer">
+    <span>latam.seriousdesign.net · v1.2.0</span>
+    <span>Hecho por <a class="sd-brand" href="https://seriousdesign.net" target="_blank" rel="noopener">SeriousDesign</a></span>
+  </footer>
 </div>
 
 <script>

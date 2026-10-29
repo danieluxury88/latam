@@ -4,6 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mapa de Latinoamérica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&display=swap" />
 <style>
   :root {
     color-scheme: light;
@@ -348,6 +351,10 @@
   .attribution { margin: 12px 0 0; font-size: .73rem; color: var(--text-muted); }
   .attribution a { color: inherit; }
 
+  .site-footer { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--hairline); font-size: .78rem; color: var(--text-muted); }
+  .site-footer .sd-brand { font-family: "Protest Guerrilla", sans-serif; font-size: 1.02rem; letter-spacing: -.3px; color: var(--text-secondary); text-decoration: none; }
+  .site-footer .sd-brand:hover { color: var(--series-1); }
+
   @media (max-width: 640px) {
     .controls { width: 100%; }
     .search-box { flex: 1; }
@@ -375,7 +382,10 @@
     <div>
       <h1>Latinoamérica — nuestras ciudades</h1>
       <p class="subtitle">Explora las ciudades principales y descubre de dónde se suma la comunidad. Los puntos azules indican población metropolitana; los naranjas, registros. Una estrella amarilla señala un aviso de usuarios sin verificar.</p>
-      <a href="nyc-trip.html" style="display:inline-block;margin-top:4px;font-size:0.78rem;color:var(--series-1);text-decoration:none;">Nuevo: plan de viaje a Nueva York →</a>
+      <div style="margin-top:4px;font-size:0.78rem;">
+        <a href="quito-trip.html" style="color:var(--series-1);text-decoration:none;">Nuevo: plan de viaje a Quito →</a> ·
+        <a href="nyc-trip.html" style="color:var(--series-1);text-decoration:none;">plan de viaje a Nueva York →</a>
+      </div>
     </div>
     <div class="controls">
       <div class="search-box">
@@ -438,6 +448,10 @@
     </aside>
   </section>
   <footer class="note">Mapa inicial de 21 ciudades. Los registros de la comunidad se guardan en el servidor.</footer>
+  <footer class="site-footer">
+    <span>latam.seriousdesign.net · v1.2.0</span>
+    <span>Hecho por <a class="sd-brand" href="https://seriousdesign.net" target="_blank" rel="noopener">SeriousDesign</a></span>
+  </footer>
 </div>
 
 <script>
